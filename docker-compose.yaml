@@ -1,54 +1,102 @@
 version: '3'
 
 volumes:
-  bin:
+  local:
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: 'bind'
+      device: '${PWD}'
 
 services:
 
-  # aws-sam:
-  #   image: aws-sam
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile.sam
-  #   env_file: .env
-  #   volumes:
-  #     - /var/run/docker.sock:/var/run/docker.sock
-  #     - "./:/var/opt"
+  #########################################################################
+  #
+  #   Prerequisite Services/Images
+  #   
+  #########################################################################  
 
-  # aws-cli:
-  #   image: aws-cli
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile.aws
-  #   env_file: .env
-  #   volumes:
-  #     - /var/run/docker.sock:/var/run/docker.sock
-  #     - "./:/var/opt"
-      
+  # AWS SAM CLI
+  aws-sam:
+    image: aws-sam
+    build:
+      context: .
+      dockerfile: .dockerfiles/Dockerfile.sam
+      args: 
+        - AWSCLI_VERSION=${AWSCLI_VERSION-1.16.71}
+        - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}
+        - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+        - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+    env_file: .env
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - "local:/var/opt"
+    command: --version
+
+  # AWS CLI
+  aws-cli:
+    image: aws-cli
+    build:
+      context: .
+      dockerfile: .dockerfiles/Dockerfile.aws
+      args: 
+        - AWSCLI_VERSION=${AWSCLI_VERSION-1.16.71}
+        - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}
+        - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+        - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+    env_file: .env
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - "local:/var/opt"
+    command: --version
+
+
+  #########################################################################
+  #
+  #   Command Services
+  #   
+  #########################################################################
   
+  # Package template via AWS SAM CLI  
   aws-sam-package:
     image: aws-sam
     command: package --template-file template.yaml --output-template-file packaged.yaml --s3-bucket ${S3_BUCKET}
     env_file: .env
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - "./:/var/opt"
+      - "local:/var/opt"
 
-
+  # Deploy packaged project via AWS SAM CLI
   aws-sam-deploy:
     image: aws-sam
-    depends_on:
-      - aws-sam-package
     command: deploy --template-file packaged.yaml --stack-name simple-websocket-chat-app --capabilities CAPABILITY_IAM --parameter-overrides MyParameterSample=MySampleValue2
     env_file: .env
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - "./:/var/opt"
+      - "local:/var/opt"
 
-  # aws-cli-cloudformation:
-  #   image: aws-cli
-  #   command: cloudformation describe-stacks --stack-name simple-websocket-chat-app --query 'Stacks[].Outputs'
-  #   env_file: .env
-  #   volumes:
-  #     - /var/run/docker.sock:/var/run/docker.sock
-  #     - "./:/var/opt"
+  # Get cloudformation via AWS CLI
+  aws-cli-cloudformation:
+    image: aws-cli
+    command: cloudformation describe-stacks --stack-name simple-websocket-chat-app --query 'Stacks[].Outputs'
+    env_file: .env
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - "local:/var/opt"
+
+  #########################################################################
+  #
+  #   Dev Commands
+  #   
+  #########################################################################
+
+  # Start a locally-hosted lambda API
+  aws-sam-local:
+    image: aws-sam
+    command: local start-api --docker-volume-basedir ./ --host 0.0.0.0
+    ports:
+      - '3000:3000'
+    env_file: .env
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - "local:/var/opt"

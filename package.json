@@ -4,17 +4,14 @@
   "description": "This is the code and template for the simple-websocket-chat-app.  There are three functions contained within the directories and a SAM template that wires them up to a DynamoDB table and provides the minimal set of permissions needed to run the app:",
   "main": "index.js",
   "scripts": {
-    "build": "rimraf dist/ && babel ./src --out-dir dist/",
-    "deploy": "npm run build && docker-compose up"
+    "postinstall": "docker-compose run aws-sam && docker-compose run aws-cli",
+    "build": "rimraf dist/ && babel ./src --out-dir dist/ --copy-files",
+    "package": "npm run build && docker-compose run aws-sam-package",
+    "deploy": "npm run package && docker-compose run aws-sam-deploy"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/aws-samples/simple-websockets-chat-app.git"
-  },
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/aws-samples/simple-websockets-chat-app/issues"
   },
   "homepage": "https://github.com/aws-samples/simple-websockets-chat-app#readme",
   "devDependencies": {
