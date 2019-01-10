@@ -4,7 +4,7 @@ This is an updated version of the [AWS Simple Websockets Chat App](https://githu
 
 # Setup
 
-It is a required that you have (node.js)[https://nodejs.org/en/)], (Docker)[https://www.docker.com/], and (Docker Compose)[https://docs.docker.com/compose/] installed on your system.
+It is a required that you have [node.js](https://nodejs.org/en/), [Docker](https://www.docker.com/), and [Docker Compose](https://docs.docker.com/compose/) installed on your system.
 
 ## .env
 
