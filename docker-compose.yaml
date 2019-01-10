@@ -1,0 +1,54 @@
+version: '3'
+
+volumes:
+  bin:
+
+services:
+
+  # aws-sam:
+  #   image: aws-sam
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.sam
+  #   env_file: .env
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock
+  #     - "./:/var/opt"
+
+  # aws-cli:
+  #   image: aws-cli
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.aws
+  #   env_file: .env
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock
+  #     - "./:/var/opt"
+      
+  
+  aws-sam-package:
+    image: aws-sam
+    command: package --template-file template.yaml --output-template-file packaged.yaml --s3-bucket ${S3_BUCKET}
+    env_file: .env
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - "./:/var/opt"
+
+
+  aws-sam-deploy:
+    image: aws-sam
+    depends_on:
+      - aws-sam-package
+    command: deploy --template-file packaged.yaml --stack-name simple-websocket-chat-app --capabilities CAPABILITY_IAM --parameter-overrides MyParameterSample=MySampleValue2
+    env_file: .env
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - "./:/var/opt"
+
+  # aws-cli-cloudformation:
+  #   image: aws-cli
+  #   command: cloudformation describe-stacks --stack-name simple-websocket-chat-app --query 'Stacks[].Outputs'
+  #   env_file: .env
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock
+  #     - "./:/var/opt"

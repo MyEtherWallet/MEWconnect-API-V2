@@ -1,0 +1,26 @@
+{
+  "name": "simple-websockets-chat-app",
+  "version": "1.0.0",
+  "description": "This is the code and template for the simple-websocket-chat-app.  There are three functions contained within the directories and a SAM template that wires them up to a DynamoDB table and provides the minimal set of permissions needed to run the app:",
+  "main": "index.js",
+  "scripts": {
+    "build": "rimraf dist/ && babel ./src --out-dir dist/",
+    "deploy": "npm run build && docker-compose up"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aws-samples/simple-websockets-chat-app.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/aws-samples/simple-websockets-chat-app/issues"
+  },
+  "homepage": "https://github.com/aws-samples/simple-websockets-chat-app#readme",
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-core": "^6.26.3",
+    "babel-plugin-transform-object-rest-spread": "^6.26.0",
+    "babel-preset-es2015": "^6.24.1"
+  }
+}

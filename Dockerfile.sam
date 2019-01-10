@@ -1,0 +1,27 @@
+FROM node:8.10.0-alpine
+
+ENV AWSCLI_VERSION "1.16.71"
+ENV AWS_DEFAULT_REGION=us-west-1
+ENV AWS_ACCESS_KEY_ID=AKIAJPC5ZTPLOI6YAYJA
+ENV AWS_SECRET_ACCESS_KEY=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
+
+RUN apk add --update \
+    python \
+    python-dev \
+    py-pip \
+    build-base \
+    && pip install awscli==$AWSCLI_VERSION --upgrade --user \
+    && pip install aws-sam-cli --upgrade --user \
+    && apk --purge -v del py-pip \
+    && rm -rf /var/cache/apk/*
+
+ENV PATH=/root/.local/bin:$PATH
+RUN aws --version
+
+RUN export AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}
+RUN export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+RUN export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+
+WORKDIR /var/opt
+
+ENTRYPOINT ["/root/.local/bin/sam"]
