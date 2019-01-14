@@ -5,6 +5,7 @@ AWS.config.update({ region: process.env.AWS_REGION })
 const DDB = new AWS.DynamoDB({ apiVersion: '2012-10-08' })
 
 const handler = (event, context, callback) => {
+  console.log('table', process.env.TABLE_NAME)
   const putParams = {
     TableName: process.env.TABLE_NAME,
     Item: {

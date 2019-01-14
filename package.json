@@ -8,7 +8,8 @@
     "installaws": "docker-compose run aws-sam && docker-compose run aws-cli",
     "build": "rimraf dist/ && babel ./src --out-dir dist/ --copy-files",
     "package": "npm run build && docker-compose run aws-sam-package",
-    "deploy": "npm run package && docker-compose run aws-sam-deploy"
+    "deploy": "npm run package && docker-compose run aws-sam-deploy",
+    "update": "npm run package && docker-compose run aws-sam-update"
   },
   "repository": {
     "type": "git",

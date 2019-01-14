@@ -31,7 +31,7 @@ Resources:
         WriteCapacityUnits: 5
       SSESpecification:
         SSEEnabled: True
-      TableName: !Ref TableName
+      # TableName: !Ref ConnectionsTable
 
   OnConnectFunction:
     Type: AWS::Serverless::Function
@@ -42,10 +42,10 @@ Resources:
       Runtime: nodejs8.10
       Environment:
         Variables:
-          TABLE_NAME: !Ref TableName
+          TABLE_NAME: !Ref ConnectionsTable
       Policies:
       - DynamoDBCrudPolicy:
-          TableName: !Ref TableName
+          TableName: !Ref ConnectionsTable
 
   OnDisconnectFunction:
     Type: AWS::Serverless::Function
@@ -56,10 +56,10 @@ Resources:
       Runtime: nodejs8.10
       Environment:
         Variables:
-          TABLE_NAME: !Ref TableName
+          TABLE_NAME: !Ref ConnectionsTable
       Policies:
       - DynamoDBCrudPolicy:
-          TableName: !Ref TableName
+          TableName: !Ref ConnectionsTable
 
   SendMessageFunction:
     Type: AWS::Serverless::Function
@@ -70,10 +70,10 @@ Resources:
       Runtime: nodejs8.10
       Environment:
         Variables:
-          TABLE_NAME: !Ref TableName
+          TABLE_NAME: !Ref ConnectionsTable
       Policies:
       - DynamoDBCrudPolicy:
-          TableName: !Ref TableName
+          TableName: !Ref ConnectionsTable
       - Statement:
         - Effect: Allow
           Action:
