@@ -15,7 +15,6 @@ _awsSdk2.default.config.update({ region: process.env.AWS_REGION });
 var DDB = new _awsSdk2.default.DynamoDB({ apiVersion: '2012-10-08' });
 
 var handler = function handler(event, context, callback) {
-  console.log('table', process.env.TABLE_NAME);
   var putParams = {
     TableName: process.env.TABLE_NAME,
     Item: {

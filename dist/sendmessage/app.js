@@ -9,12 +9,15 @@ var AWS = require('aws-sdk');
 require('aws-sdk/clients/apigatewaymanagementapi');
 
 var ddb = new AWS.DynamoDB.DocumentClient({ apiVersion: '2012-08-10' });
+var DDB = new AWS.DynamoDB({ apiVersion: '2012-10-08' });
 
 var TABLE_NAME = process.env.TABLE_NAME;
 
 
 exports.handler = async function (event, context) {
   var connectionData = void 0;
+
+  console.log('conn', event.requestContext.connectionId);
 
   try {
     connectionData = await ddb.scan({ TableName: TABLE_NAME, ProjectionExpression: 'connectionId' }).promise();
@@ -37,7 +40,8 @@ exports.handler = async function (event, context) {
     } catch (e) {
       if (e.statusCode === 410) {
         console.log('Found stale connection, deleting ' + connectionId);
-        await ddb.deleteItem({ TableName: TABLE_NAME, Key: { connectionId: connectionId } }).promise();
+        var a = await ddb.delete({ TableName: TABLE_NAME, Key: { connectionId: connectionId } }).promise();
+        console.log('aaaaa', a);
       } else {
         throw e;
       }
