@@ -14,15 +14,31 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 _awsSdk2.default.config.update({ region: process.env.AWS_REGION });
 var DDB = new _awsSdk2.default.DynamoDB({ apiVersion: '2012-10-08' });
 
-var handler = function handler(event, context, callback) {
+var handler = async function handler(event, context, callback) {
+  var query = event.queryStringParameters;
+
+  var role = query.role;
+  var connId = query.connId;
+
+  if (role !== 'initiator' || role !== 'receiver') {
+    return callback(null, {
+      statusCode: 500,
+      body: 'Failed to connect: Invalid role'
+    });
+  }
+
   var putParams = {
     TableName: process.env.TABLE_NAME,
     Item: {
       connectionId: {
         S: event.requestContext.connectionId
       }
+      // connId: { 
+      //   S: connId
+      // }
     }
   };
+
   DDB.putItem(putParams, function (err) {
     callback(null, {
       statusCode: err ? 500 : 200,

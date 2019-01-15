@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "description": "OnConnect example for WebSockets on API Gateway",
   "main": "src/app.js",
-  "author": "SAM CLI",
+  "author": {
+    "name": "SAM CLI"
+  },
   "license": "MIT",
-  "dependencies": {}
+  "readme": "ERROR: No README data found!",
+  "_id": "on-connect@1.0.0"
 }

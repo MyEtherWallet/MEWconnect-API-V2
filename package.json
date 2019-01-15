@@ -6,7 +6,8 @@
   "scripts": {
     "postinstall": "npm run installaws",
     "installaws": "docker-compose run aws-sam && docker-compose run aws-cli",
-    "build": "rimraf dist/ && babel ./src --out-dir dist/ --copy-files",
+    "compile-modules": "node .build/imports.js",
+    "build": "rimraf dist/ && babel ./src --out-dir dist/ --copy-files && npm run compile-modules",
     "package": "npm run build && docker-compose run aws-sam-package",
     "deploy": "npm run package && docker-compose run aws-sam-deploy",
     "update": "npm run package && docker-compose run aws-sam-update"
@@ -20,6 +21,14 @@
     "babel-cli": "^6.26.0",
     "babel-core": "^6.26.3",
     "babel-plugin-transform-object-rest-spread": "^6.26.0",
-    "babel-preset-es2015": "^6.24.1"
+    "babel-preset-es2015": "^6.24.1",
+    "bluebird": "^3.5.3",
+    "find-imports": "^1.1.0",
+    "find-requires": "^0.2.4",
+    "lodash": "^4.17.11",
+    "node-cmd": "^3.0.0",
+    "node-dir": "^0.1.17",
+    "read-package-json": "^2.0.13",
+    "write-pkg": "^3.2.0"
   }
 }
