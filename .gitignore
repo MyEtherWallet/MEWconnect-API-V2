@@ -1,7 +1,4 @@
-*.iml
-.idea/
-.aws-sam/
 packaged.yaml
-./node_modules/
+node_modules/
 .env
 dist/
