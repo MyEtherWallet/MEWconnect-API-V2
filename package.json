@@ -4,7 +4,7 @@
   "description": "This is the code and template for the simple-websocket-chat-app.  There are three functions contained within the directories and a SAM template that wires them up to a DynamoDB table and provides the minimal set of permissions needed to run the app:",
   "main": "index.js",
   "scripts": {
-    "postinstall": "npm run installaws && npm run lerna:init",
+    "postinstall": "npm run installaws",
     "installaws": "docker-compose run aws-sam && docker-compose run aws-cli",
     "compile-modules": "node .build/imports.js",
     "build": "rimraf dist/ && babel ./src --out-dir dist/ --copy-files && npm run compile-modules",

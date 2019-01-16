@@ -23,28 +23,15 @@ Resources:
       AttributeDefinitions:
       - AttributeName: "connectionId"
         AttributeType: "S"
-      - AttributeName: "connId"
-        AttributeType: "S"
       KeySchema:
       - AttributeName: "connectionId"
         KeyType: "HASH"
-      - AttributeName: "connId"
-        KeyType: "RANGE"
       ProvisionedThroughput:
         ReadCapacityUnits: 5
         WriteCapacityUnits: 5
-      GlobalSecondaryIndexes:
-      - IndexName: "connIdIndex"
-        KeySchema:
-        - AttributeName: "connId"
-          KeyType: "HASH"
-        Projection:
-          ProjectionType: "KEYS_ONLY"
-        ProvisionedThroughput:
-          ReadCapacityUnits: 5
-          WriteCapacityUnits: 5
       SSESpecification:
         SSEEnabled: True
+      # TableName: !Ref ConnectionsTable
 
   OnConnectFunction:
     Type: AWS::Serverless::Function

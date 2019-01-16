@@ -19,24 +19,22 @@ const prependFile = require('prepend-file')
  * This function is invoked at the bottom of this file.
  */
 const run = async () => {
-  let srcDirectories = await getDistDirectories()
+  let srcDirectories = await getDirectories(`${process.cwd()}/dist/lambda`)
   await asyncForEach(srcDirectories, async directory => {
-    let imports = await getImports(directory)
+    let imports = await getImports(`${directory}/app.js`)
     await writePackageJSON(directory, imports)
     await installPackages(directory)
   })
 }
 
 /**
- * Get and return an array of all of the /dist directories.
- * Each of these directories houses a separate lambda function module.
+ * Get and return an array of all of the direct subdirectories within a @directory.
  * 
- * @return {Array} - Array of paths to each /dist lambda module directory
+ * @return {Array} - Array of paths to each subdirectory
  */
-const getDistDirectories = async () => {
+const getDirectories = async (directory) => {
   return new Promise((resolve, reject) => {
-    let src = `${process.cwd()}/dist/lambda`
-  	dir.files(src, 'dir',  (err, paths) => {
+  	dir.files(directory, 'dir', (err, paths) => {
       resolve(paths)
     }, {
       recursive: false
@@ -45,15 +43,14 @@ const getDistDirectories = async () => {
 }
 
 /**
- * Given a lambda module @directory, find each npm module that is required/imported within
- * that lambda module's code.
+ * Given a @file, find each npm module that is required/imported within
+ * that file's code.
  * 
- * @param  {String} directory - Path to the /dist lambda module
+ * @param  {String} file - Path to file
  * @return {Array} - Array of required/imported npm modules
  */
-const getImports = async (directory) => {
+const getImports = async (file) => {
   return new Promise((resolve, reject) => {
-    let file = `${directory}/app.js`
     let src = fs.readFileSync(file, 'utf-8')
     let imports = findRequires(src)
     console.log(imports)
