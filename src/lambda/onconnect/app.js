@@ -1,13 +1,12 @@
 'use strict'
 
 import AWS from 'aws-sdk'
-import '@util/aws/clients/apigatewaymanagementapi'
-import { validateSignal, validConnId, validHex, validRole } from '@util/validation'
-import { signals } from '@util/signals'
+import { validConnId, validHex, validRole } from '@util/validation'
 
 const ddb = new AWS.DynamoDB.DocumentClient({ apiVersion: '2012-08-10' })
 
 exports.handler = async (event, context) => {
+  let connectionId = event.requestContext.connectionId
   let query = event.queryStringParameters || {}
   let role = query.role || null
   let connId = query.connId || null
@@ -20,7 +19,7 @@ exports.handler = async (event, context) => {
   const putParams = {
     TableName: process.env.TABLE_NAME,
     Item: {
-      connectionId: event.requestContext.connectionId,
+      connectionId: connectionId,
       connId: connId,
       role: role,
       signed: signed
@@ -28,7 +27,7 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    let result = await ddb.put(putParams).promise()
+    await ddb.put(putParams).promise()
     return { statusCode: 200, body: `Connected` }
   } catch (e) {
     return { statusCode: 500, body: `Failed to connect: ${JSON.stringify(e)}` }

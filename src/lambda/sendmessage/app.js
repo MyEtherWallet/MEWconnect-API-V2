@@ -4,8 +4,8 @@
 const AWS = require('aws-sdk');
 
 // Add ApiGatewayManagementApi to the AWS namespace
-require('aws-sdk/clients/apigatewaymanagementapi');
-// import '@util/aws/clients/apigatewaymanagementapi'
+// require('aws-sdk/clients/apigatewaymanagementapi');
+import '@util/aws/clients/apigatewaymanagementapi'
 
 const ddb = new AWS.DynamoDB.DocumentClient({ apiVersion: '2012-08-10' });
 const DDB = new AWS.DynamoDB({ apiVersion: '2012-10-08' })

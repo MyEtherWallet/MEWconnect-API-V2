@@ -25,7 +25,6 @@ const SRC_DIR = `${process.cwd()}/dist/lambda`
  */
 const run = async () => {
   let srcDirectories = await getDirectories(SRC_DIR)
-  console.log('dirs: ', srcDirectories)
   await asyncForEach(srcDirectories, async directory => {
     let file = `${directory}/app.js`
     let imports = await getImports(file)
