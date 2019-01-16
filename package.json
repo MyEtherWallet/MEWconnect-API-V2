@@ -6,10 +6,8 @@
   "scripts": {
     "postinstall": "npm run installaws && npm run lerna:init",
     "installaws": "docker-compose run aws-sam && docker-compose run aws-cli",
-    "lerna:init": "lerna init",
-    "lerna:build": "lerna run build",
     "compile-modules": "node .build/imports.js",
-    "build": "rimraf dist/ && babel ./src --out-dir dist/ --copy-files",
+    "build": "rimraf dist/ && babel ./src --out-dir dist/ --copy-files && npm run compile-modules",
     "package": "npm run build && docker-compose run aws-sam-package",
     "deploy": "npm run package && docker-compose run aws-sam-deploy",
     "update": "npm run package && docker-compose run aws-sam-update"
@@ -27,10 +25,21 @@
     "bluebird": "^3.5.3",
     "find-imports": "^1.1.0",
     "find-requires": "^0.2.4",
+    "fs-extra": "^7.0.1",
     "lodash": "^4.17.11",
+    "module-alias": "^2.1.0",
     "node-cmd": "^3.0.0",
     "node-dir": "^0.1.17",
+    "prepend-file": "^1.3.1",
     "read-package-json": "^2.0.13",
     "write-pkg": "^3.2.0"
+  },
+  "_moduleAliases": {
+    "@": "dist",
+    "@lambda": "dist/lambda",
+    "@util": "dist/util"
+  },
+  "dependencies": {
+    "crypto": "^1.0.1"
   }
 }

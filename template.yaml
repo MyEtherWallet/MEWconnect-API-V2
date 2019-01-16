@@ -45,12 +45,11 @@ Resources:
           WriteCapacityUnits: 5
       SSESpecification:
         SSEEnabled: True
-      # TableName: !Ref ConnectionsTable
 
   OnConnectFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: dist/onconnect/
+      CodeUri: dist/lambda/onconnect/
       Handler: app.handler
       MemorySize: 256
       Runtime: nodejs8.10
@@ -64,7 +63,7 @@ Resources:
   OnDisconnectFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: dist/ondisconnect/
+      CodeUri: dist/lambda/ondisconnect/
       Handler: app.handler
       MemorySize: 256
       Runtime: nodejs8.10
@@ -78,7 +77,7 @@ Resources:
   SendMessageFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: dist/sendmessage/
+      CodeUri: dist/lambda/sendmessage/
       Handler: app.handler
       MemorySize: 256
       Runtime: nodejs8.10

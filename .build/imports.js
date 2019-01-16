@@ -1,14 +1,17 @@
 'use strict'
 
+require('module-alias/register')
+
 const _ = require('lodash')
 const cmd = require('node-cmd')
 const dir = require('node-dir')
 const findImports = require('find-imports')
 const findRequires = require('find-requires')
-const fs = require('fs')
+const fs = require('fs-extra')
 const readJson = require('read-package-json')
 const writePkg = require('write-pkg')
 const promise = require('bluebird')
+const prependFile = require('prepend-file')
 
 /**
  * Get each lambda module's required npm packages, and install them in the
@@ -32,7 +35,7 @@ const run = async () => {
  */
 const getDistDirectories = async () => {
   return new Promise((resolve, reject) => {
-    let src = `${process.cwd()}/dist`
+    let src = `${process.cwd()}/dist/lambda`
   	dir.files(src, 'dir',  (err, paths) => {
       resolve(paths)
     }, {
@@ -53,6 +56,7 @@ const getImports = async (directory) => {
     let file = `${directory}/app.js`
     let src = fs.readFileSync(file, 'utf-8')
     let imports = findRequires(src)
+    console.log(imports)
     resolve(imports)
   })
 }
@@ -68,17 +72,55 @@ const writePackageJSON = async (directory, imports) => {
   return new Promise(async (resolve, reject) => {
     let dependencies = {}
     let packageDependencies = await getPackageDependencies()
+    let moduleAliases = {}
+    let isPrepended = false
     
-    imports.forEach(imp => {
+    await asyncForEach(imports, async imp => {
       let version = packageDependencies[imp] || null
+      let resolution
+
+      // Get resolution path of import //
+      try {
+        resolution = require.resolve(imp)
+      } catch (e) {
+        resolution = null
+      }
+
+      // If root package.json has a matching package, use that information/version //
       if(version) {
         dependencies[imp] = version
       }
+
+      // If a resolution exists and it is a relative path (as opposed to a node_module), then copy the resolution... //
+      // .. and add module-alias as a dependency //
+      if(resolution && resolution.split('/').length > 1) {
+        let relativePath = resolution.split('dist/')[1]
+        moduleAliases[imp] = relativePath
+        if (!isPrepended) {
+          await addModuleAlias(`${directory}/app.js`)
+          dependencies['module-alias'] = '^2.1.0'
+          isPrepended = true
+          fs.copySync(resolution, `${directory}/${relativePath}`)
+        }
+      }
     })
 
+    // Merge existing package.json in module directory with data obtained above //
     readJson(`${directory}/package.json`, async (err, data) => {
-      let packageData = _.merge(data || {}, {dependencies: dependencies})
+      let packageData = _.merge(data || {}, {dependencies: dependencies, _moduleAliases: moduleAliases})
       await writePkg(directory, packageData)
+      resolve()
+    })
+  })
+}
+
+/**
+ * Prepend a @file with require('module-alias/register')
+ * @param  {String} file - File path
+ */
+const addModuleAlias = async (file) => {
+  return new Promise(async (resolve, reject) => {
+    prependFile(file, `require('module-alias/register');\n\n`, () => {
       resolve()
     })
   })
