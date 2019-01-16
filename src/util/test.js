@@ -1,4 +1,6 @@
 
+import randomstring from 'randomstring'
+
 export default () => {
-	return 'hello'
+	return randomstring.generate()
 }

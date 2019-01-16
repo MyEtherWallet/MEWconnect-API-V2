@@ -13,19 +13,22 @@ const writePkg = require('write-pkg')
 const promise = require('bluebird')
 const prependFile = require('prepend-file')
 
+const SRC_DIR = `${process.cwd()}/dist/lambda`
+
 /**
- * Get each lambda module's required npm packages, and install them in the
- * /dist directory of each individual module, so that it will work when uploaded to AWS.
- * This function is invoked at the bottom of this file.
+ * 
  */
 const run = async () => {
-  let srcDirectories = await getDirectories(`${process.cwd()}/dist/lambda`)
+  let srcDirectories = await getDirectories(SRC_DIR)
   await asyncForEach(srcDirectories, async directory => {
-    let imports = await getImports(`${directory}/app.js`)
+    let file = `${directory}/app.js`
+    let imports = await getImports(file)
     await writePackageJSON(directory, imports)
+    await addModuleAlias(file)
     await installPackages(directory)
   })
 }
+
 
 /**
  * Get and return an array of all of the direct subdirectories within a @directory.
@@ -49,14 +52,38 @@ const getDirectories = async (directory) => {
  * @param  {String} file - Path to file
  * @return {Array} - Array of required/imported npm modules
  */
-const getImports = async (file) => {
-  return new Promise((resolve, reject) => {
+const getImports = async (file, imports = []) => {
+  return new Promise(async (resolve, reject) => {
     let src = fs.readFileSync(file, 'utf-8')
-    let imports = findRequires(src)
-    console.log(imports)
+    let _imports = findRequires(src)
+    if(_imports.length > 0) {
+
+      await asyncForEach(_imports, async _import => {
+        let resolution = getImportResolution(_import)
+        imports.push({
+          import: _import,
+          path: resolution
+        })
+        if(resolution && resolution.split('/').length > 1) await getImports(resolution, imports)
+      })
+
+    }
     resolve(imports)
   })
 }
+
+
+const getImportResolution = (_import) => {
+  let resolution
+  try {
+    resolution = require.resolve(_import)
+  } catch (e) {
+    resolution = null
+  }
+  return resolution
+}
+
+
 
 /**
  * Given a lambda module @directory and an array of its @imports,
@@ -73,32 +100,23 @@ const writePackageJSON = async (directory, imports) => {
     let isPrepended = false
     
     await asyncForEach(imports, async imp => {
-      let version = packageDependencies[imp] || null
-      let resolution
-
-      // Get resolution path of import //
-      try {
-        resolution = require.resolve(imp)
-      } catch (e) {
-        resolution = null
-      }
-
+      let _import = imp.import
+      let resolution = imp.path
+      let version = packageDependencies[_import] || null
+ 
       // If root package.json has a matching package, use that information/version //
       if(version) {
-        dependencies[imp] = version
+        dependencies[_import] = version
       }
 
+      // Make module-alias dependency on all //
+      dependencies['module-alias'] = '^2.1.0'
+
       // If a resolution exists and it is a relative path (as opposed to a node_module), then copy the resolution... //
-      // .. and add module-alias as a dependency //
       if(resolution && resolution.split('/').length > 1) {
         let relativePath = resolution.split('dist/')[1]
-        moduleAliases[imp] = relativePath
-        if (!isPrepended) {
-          await addModuleAlias(`${directory}/app.js`)
-          dependencies['module-alias'] = '^2.1.0'
-          isPrepended = true
-          fs.copySync(resolution, `${directory}/${relativePath}`)
-        }
+        moduleAliases[_import] = relativePath
+        fs.copySync(resolution, `${directory}/${relativePath}`)
       }
     })
 

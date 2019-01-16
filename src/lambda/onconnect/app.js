@@ -16,7 +16,7 @@ const handler = (event, context, callback) => {
     }
   }
 
-  console.log('t', test())
+  console.log('randomstring: ', test())
   
   DDB.putItem(putParams, err => {
     callback(null, {
