@@ -1,6 +1,8 @@
 'use strict'
 
 import AWS from 'aws-sdk'
+import { signals } from '@util/signals'
+
 AWS.config.update({ region: process.env.AWS_REGION })
 const DDB = new AWS.DynamoDB({ apiVersion: '2012-10-08' })
 

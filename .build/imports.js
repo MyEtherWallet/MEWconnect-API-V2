@@ -16,10 +16,16 @@ const prependFile = require('prepend-file')
 const SRC_DIR = `${process.cwd()}/dist/lambda`
 
 /**
- * 
+ * This module attempts to:
+ * 1. Get the paths of each AWS lambda module.
+ * 2. Recursively get each imported/required npm and local module
+ * 3. Update each module's package.json with these dependencies
+ * 4. Add module-alias npm module to each module
+ * 5. Install the required npm packages locally in each AWS lambda module directory
  */
 const run = async () => {
   let srcDirectories = await getDirectories(SRC_DIR)
+  console.log('dirs: ', srcDirectories)
   await asyncForEach(srcDirectories, async directory => {
     let file = `${directory}/app.js`
     let imports = await getImports(file)
@@ -46,8 +52,8 @@ const getDirectories = async (directory) => {
 }
 
 /**
- * Given a @file, find each npm module that is required/imported within
- * that file's code.
+ * Given a @file, recursively find each npm module that is required/imported within
+ * that file's code and its dependencies.
  * 
  * @param  {String} file - Path to file
  * @return {Array} - Array of required/imported npm modules
@@ -72,7 +78,11 @@ const getImports = async (file, imports = []) => {
   })
 }
 
-
+/**
+ * Given an @_import, return the resolved path to that particular import, be it local or an npm module path.
+ * @param  {String} _import - Name of module/import
+ * @return {String} - Path of import or null
+ */
 const getImportResolution = (_import) => {
   let resolution
   try {
@@ -113,6 +123,7 @@ const writePackageJSON = async (directory, imports) => {
       dependencies['module-alias'] = '^2.1.0'
 
       // If a resolution exists and it is a relative path (as opposed to a node_module), then copy the resolution... //
+      // ... into the AWS lambda module directory //
       if(resolution && resolution.split('/').length > 1) {
         let relativePath = resolution.split('dist/')[1]
         moduleAliases[_import] = relativePath
@@ -147,7 +158,7 @@ const addModuleAlias = async (file) => {
  * @param  {String} directory - Path to the /dist lambda module
  */
 const installPackages = async (directory) => {
-  const cmdAsync = promise.promisify(cmd.run, { multiArgs: true, context: cmd })
+  const cmdAsync = promise.promisify(cmd.get, { multiArgs: true, context: cmd })
   await cmdAsync(`npm install --prefix ${directory}`)
 }
 

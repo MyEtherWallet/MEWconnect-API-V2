@@ -1,29 +1,36 @@
 'use strict'
 
 import AWS from 'aws-sdk'
-import test from '@util/test'
+import '@util/aws/clients/apigatewaymanagementapi'
+import { validateSignal, validConnId, validHex, validRole } from '@util/validation'
+import { signals } from '@util/signals'
 
-AWS.config.update({ region: process.env.AWS_REGION })
-const DDB = new AWS.DynamoDB({ apiVersion: '2012-10-08' })
+const ddb = new AWS.DynamoDB.DocumentClient({ apiVersion: '2012-08-10' })
 
-const handler = (event, context, callback) => {
+exports.handler = async (event, context) => {
+  let query = event.queryStringParameters || {}
+  let role = query.role || null
+  let connId = query.connId || null
+  let signed = query.signed || null
+
+  if (!validRole(role)) return { statusCode: 500, body: 'Failed to connect: Invalid @role' }
+  if (!validConnId(connId)) return { statusCode: 500, body: 'Failed to connect: Invalid @signed' }
+  if (!validHex(signed)) return { statusCode: 500, body: 'Failed to connect: Invalid @signed' }
+
   const putParams = {
     TableName: process.env.TABLE_NAME,
     Item: {
-      connectionId: { 
-        S: event.requestContext.connectionId 
-      }
+      connectionId: event.requestContext.connectionId,
+      connId: connId,
+      role: role,
+      signed: signed
     }
   }
 
-  console.log('randomstring: ', test())
-  
-  DDB.putItem(putParams, err => {
-    callback(null, {
-      statusCode: err ? 500 : 200,
-      body: err ? `Failed to connect: ${JSON.stringify(err)}` : 'Connected'
-    })
-  })
+  try {
+    let result = await ddb.put(putParams).promise()
+    return { statusCode: 200, body: `Connected` }
+  } catch (e) {
+    return { statusCode: 500, body: `Failed to connect: ${JSON.stringify(e)}` }
+  }
 }
-
-export { handler }

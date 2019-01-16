@@ -41,6 +41,7 @@
   },
   "dependencies": {
     "crypto": "^1.0.1",
-    "randomstring": "^1.1.5"
+    "randomstring": "^1.1.5",
+    "validate": "^4.5.1"
   }
 }
