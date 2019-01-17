@@ -2,7 +2,7 @@
 
 import AWS from 'aws-sdk'
 import { validConnId, validHex, validRole } from '@util/validation'
-import { stages } from '@util/signals'
+import { signals, stages } from '@util/signals'
 
 const ddb = new AWS.DynamoDB.DocumentClient({ apiVersion: '2012-08-10' })
 const { TABLE_NAME } = process.env
@@ -32,16 +32,15 @@ const handler = async (event, context) => {
 
   const connectionData = {
     connectionId,
-    query
+    query,
+    event
   }
 
-  switch(role) {
+  switch (role) {
     case stages.initiator:
       return await handleInitiator(connectionData)
-      break
     case stages.receiver:
       return await handleReceiver(connectionData)
-      break
   }
 }
 
@@ -63,7 +62,9 @@ const handleInitiator = async (connectionData) => {
       initiator: {
         connectionId: connectionData.connectionId,
         signed: connectionData.query.signed
-      }
+      },
+      signal: signals.initiated,
+      endpoint: connectionData.event.requestContext.domainName + '/' + connectionData.event.requestContext.stage
     }
   }
 
@@ -120,7 +121,9 @@ const handleReceiver = async (connectionData) => {
       receiver: {
         connectionId: connectionData.connectionId,
         signed: connectionData.query.signed
-      }
+      },
+      signal: signals.confirmation,
+      endpoint: connectionData.event.requestContext.domainName + '/' + connectionData.event.requestContext.stage
     }
   }
 
@@ -132,7 +135,6 @@ const handleReceiver = async (connectionData) => {
     return { statusCode: 500, body: `Failed to connect: ${JSON.stringify(e)}` }
   }
 }
-
 
 
 export { handler }

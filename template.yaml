@@ -31,6 +31,47 @@ Resources:
         WriteCapacityUnits: 5
       SSESpecification:
         SSEEnabled: True
+      StreamSpecification:
+        StreamViewType: NEW_IMAGE
+  ConnectionsTableStream:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      BatchSize: 1
+      Enabled: True
+      EventSourceArn:
+        Fn::GetAtt: [ ConnectionsTable , StreamArn ]
+      FunctionName:
+        Fn::GetAtt: [ OnDbEntryFunction, Arn ]
+      StartingPosition: LATEST
+
+  OnDbEntryFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/lambda/ondbentry/
+      Handler: app.handler
+      MemorySize: 256
+      Runtime: nodejs8.10
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref ConnectionsTable
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName: !Ref ConnectionsTable
+      - Statement:
+        - Effect: Allow
+          Action:
+          - dynamodb:DescribeStream
+          - dynamodb:GetRecords
+          - dynamodb:GetShardIterator
+          - dynamodb:ListStreams
+          Resource: 
+          - "*"
+      - Statement:
+        - Effect: Allow
+          Action:
+          - 'execute-api:ManageConnections'
+          Resource:
+          - 'arn:aws:execute-api:*:*:*/@connections/*'
 
   OnConnectFunction:
     Type: AWS::Serverless::Function
