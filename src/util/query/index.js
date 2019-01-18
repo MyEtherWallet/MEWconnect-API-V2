@@ -3,6 +3,18 @@
 import dynamoDocumentClient from '@util/aws/functions/dynamodb-document-client'
 
 export default (() => {
+
+  const byConnectionId = async (connectionId) => {
+    const getParams = {
+      connectionId: connectionId
+    }
+    try {
+      let entry = await dynamoDocumentClient.get(getParams)
+      return entry.Item
+    } catch (e) {
+      return null
+    }
+  }
   
   /**
    * Perform a query "by @connId" and return the results.
@@ -30,6 +42,7 @@ export default (() => {
   }
 
   return {
+    byConnectionId,
     byConnId
   }
 })()

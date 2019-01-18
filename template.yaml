@@ -121,6 +121,36 @@ Resources:
       - DynamoDBCrudPolicy:
           TableName: !Ref ConnectionsTable
 
+  OnOfferSignalFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/lambda/onoffer/
+      Handler: app.handler
+      MemorySize: 256
+      Runtime: nodejs8.10
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref ConnectionsTable
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName: !Ref ConnectionsTable
+      - Statement:
+        - Effect: Allow
+          Action:
+          - dynamodb:DescribeStream
+          - dynamodb:GetRecords
+          - dynamodb:GetShardIterator
+          - dynamodb:ListStreams
+          - dynamodb:Query
+          Resource: 
+          - "*"
+      - Statement:
+        - Effect: Allow
+          Action:
+          - 'execute-api:ManageConnections'
+          Resource:
+          - 'arn:aws:execute-api:*:*:*/@connections/*'
+
   SendMessageFunction:
     Type: AWS::Serverless::Function
     Properties:
