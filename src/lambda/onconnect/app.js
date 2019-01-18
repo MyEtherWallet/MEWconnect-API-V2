@@ -1,8 +1,9 @@
 'use strict'
 
+import query from '@util/query'
 import dynamoDocumentClient from '@util/aws/functions/dynamodb-document-client'
 import { validConnId, validHex, validRole } from '@util/validation'
-import { signals, stages } from '@util/signals'
+import { signals, roles } from '@util/signals'
 
 /**
  * Handle an incoming WebSocket connection and update the dynamoDB database with pertinent information.
@@ -17,11 +18,11 @@ import { signals, stages } from '@util/signals'
  * @param  {String} signed - Private key signed with the private key created for the connection
  */
 const handler = async (event, context) => {
-  let connectionId = event.requestContext.connectionId
-  let query = event.queryStringParameters || {}
-  let role = query.role || null
-  let connId = query.connId || null
-  let signed = query.signed || null
+  const connectionId = event.requestContext.connectionId
+  const query = event.queryStringParameters || {}
+  const role = query.role || null
+  const connId = query.connId || null
+  const signed = query.signed || null
 
   if (!validRole(role)) return { statusCode: 500, body: 'Failed to connect: Invalid @role' }
   if (!validConnId(connId)) return { statusCode: 500, body: 'Failed to connect: Invalid @signed' }
@@ -34,9 +35,9 @@ const handler = async (event, context) => {
   }
 
   switch (role) {
-    case stages.initiator:
+    case roles.initiator:
       return await handleInitiator(connectionData)
-    case stages.receiver:
+    case roles.receiver:
       return await handleReceiver(connectionData)
   }
 }
@@ -52,13 +53,15 @@ const handler = async (event, context) => {
  * @param  {String} connectionData.query.signed - The private key signed with the private key generated and supplied by the initiator.
  */
 const handleInitiator = async (connectionData) => {
+  // Ensure an entry with given @connId does not already exist //
+  let entries = await query.byConnId(connectionData.query.connId)
+  if (entries.length > 0) return { statusCode: 500, body: `Failed to connect: @connId already exists!` }
+
   const putParams = {
+    connectionId: connectionData.connectionId,
     connId: connectionData.query.connId,
-    initiator: {
-      connectionId: connectionData.connectionId,
-      signed: connectionData.query.signed
-    },
-    signal: signals.initiated,
+    role: roles.initiator,
+    signed: connectionData.query.signed,
     endpoint: connectionData.event.requestContext.domainName + '/' + connectionData.event.requestContext.stage
   }
 
@@ -85,31 +88,22 @@ const handleInitiator = async (connectionData) => {
  *                                                by the initiator.
  */
 const handleReceiver = async (connectionData) => {
-  let initiator
+  let entries = await query.byConnId(connectionData.query.connId)
+  if (entries.length === 0) return { statusCode: 500, body: `Failed to connect: Connection pair doesn't exist!` }
+  if (entries.length >= 2) return { statusCode: 500, body: `Failed to connect: A connection pair already exists for this @connId` }
 
-  const getParams = {
-    connId: connectionData.query.connId
-  }
-
-  try {
-    let entry = await dynamoDocumentClient.get(getParams)
-    initiator = entry.Item.initiator
-  } catch (e) {
-    return { statusCode: 500, body: `Failed to connect: Connection pair doesn't exist!` }
-  }
   
   // Check to ensure that given @signed matches what was originally provided by the initiator //
+  let initiator = entries[0]
+  if (initiator.role !== roles.initiator) return { statusCode: 500, body: 'Failed to connect: Initiator has disconnected' }
   if (connectionData.query.signed !== initiator.signed) return { statusCode: 500, body: 'Failed to connect: Invalid @signed' }
 
   // Update entry with receiver information //
   const putParams = {
+    connectionId: connectionData.connectionId,
     connId: connectionData.query.connId,
-    initiator: initiator,
-    receiver: {
-      connectionId: connectionData.connectionId,
-      signed: connectionData.query.signed
-    },
-    signal: signals.confirmation,
+    role: roles.receiver,
+    signed: connectionData.query.signed,
     endpoint: connectionData.event.requestContext.domainName + '/' + connectionData.event.requestContext.stage
   }
 
@@ -121,6 +115,5 @@ const handleReceiver = async (connectionData) => {
     return { statusCode: 500, body: `Failed to connect: ${JSON.stringify(e)}` }
   }
 }
-
 
 export { handler }

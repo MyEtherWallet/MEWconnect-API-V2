@@ -1,40 +1,45 @@
 'use strict'
 
+import query from '@util/query'
+import dynamoDocumentClient from '@util/aws/functions/dynamodb-document-client'
 import postMessage from '@util/aws/functions/post-message'
-import { signals, stages } from '@util/signals'
+import { signals, roles } from '@util/signals'
 
 /**
- * On DynamoDB entry trigger, handle/process the event according to the signal.
+ * On DynamoDB entry trigger, handle/process the event according to the client's role.
  * 
  * @param  {Object} event - Event object passed from AWS
  */
 const handler = async (event, context) => {
-  const entry = event.Records[0].dynamodb.NewImage
-  const signal = entry.signal.S
+  const record = event.Records[0]
+  const eventName = record.eventName
 
-  switch (signal) {
-    case signals.initiated:
-      return await handleInitiated(entry)
-    case signals.confirmation:
-      return await handleConfirmation(entry)
+  if (eventName !== 'INSERT') return
+
+  const entry = record.dynamodb.NewImage
+  const role = entry.role.S
+
+  switch (role) {
+    case roles.initiator:
+      return await handleInitiator(entry)
+    case roles.receiver:
+      return await handleReceiver(entry)
     default:
       return
   }
 }
 
 /**
- * Handle signals.initiated signal. Send confirmation message to initiator.
+ * Handle initiator. Send initiated signal payload to initiator.
  * 
  * @param  {Object} entry - New/updated DynamoDB entry
  */
-const handleInitiated = async (entry) => {
-  const signal = entry.signal.S
+const handleInitiator = async (entry) => {
+  const connectionId = entry.connectionId.S
   const endpoint = entry.endpoint.S
-  const initiator = entry.initiator.M
-  const connectionId = initiator.connectionId.S
 
   const postData = {
-    signal: signal,
+    signal: signals.initiated,
     data: '',
     message: 'Connected. Waiting for receiver.'
   }
@@ -43,32 +48,38 @@ const handleInitiated = async (entry) => {
 }
 
 /**
- * Handle signals.confirmation signal. Send confirmation to both initiator and receiver.
+ * Handle receiver connection. Send confirmation to both initiator and receiver.
  * 
  * @param  {Object} entry - New/updated DynamoDB entry
  */
-const handleConfirmation = async (entry) => {
-  const signal = entry.signal.S
+const handleReceiver = async (entry) => {
+  const connectionId = entry.connectionId.S
+  const connId = entry.connId.S
   const endpoint = entry.endpoint.S
-  const initiator = entry.initiator.M
-  const receiver = entry.receiver.M
-  const connectionIdInitiator = initiator.connectionId.S 
-  const connectionIdReceiver = receiver.connectionId.S
 
+  // Find initiator/receiver pair by connId //
+  const pair = await query.byConnId(connId)
+  const initiator = pair.find(obj => {
+    return obj.role === roles.initiator
+  })
+  const receiver = pair.find(obj => {
+    return obj.role === roles.receiver
+  })
+
+  // Post confirmation signal payloads to both initiator and receiver //
   const postDataInitiator = {
-    signal: signal,
+    signal: signals.confirmation,
     data: '',
     message: 'Receiver Connected. Please Create WebRTC Offer.'
   }
-
   const postDataReceiver = {
-    signal: signal,
+    signal: signals.confirmation,
     data: '',
     message: 'Connected. Awaiting WebRTC Offer Details.'
   }
 
-  await postMessage(endpoint, connectionIdInitiator, postDataInitiator)
-  await postMessage(endpoint, connectionIdReceiver, postDataReceiver)
+  await postMessage(endpoint, initiator.connectionId, postDataInitiator)
+  await postMessage(endpoint, receiver.connectionId, postDataReceiver)
 }
 
 export { handler }

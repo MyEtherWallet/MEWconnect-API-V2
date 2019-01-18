@@ -1,6 +1,6 @@
 'use strict'
 
-import { stages } from '@util/signals'
+import { roles } from '@util/signals'
 
 const validConnId = string => {
   let validHex = /[0-9A-Fa-f].*/.test(string)
@@ -15,7 +15,7 @@ const validHex = string => {
 }
 
 const validRole = string => {
-	return (string === stages.initiator || string === stages.receiver)
+	return (string === roles.initiator || string === roles.receiver)
 }
 
 export { validConnId, validHex, validRole }

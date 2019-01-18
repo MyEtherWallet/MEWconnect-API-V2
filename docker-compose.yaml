@@ -69,7 +69,7 @@ services:
   # Deploy packaged project via AWS SAM CLI
   aws-sam-deploy:
     image: aws-sam
-    command: deploy --template-file packaged.yaml --stack-name simple-websocket-chat-app2 --capabilities CAPABILITY_IAM --parameter-overrides MyParameterSample=MySampleValue
+    command: deploy --template-file packaged.yaml --stack-name simple-websocket-chat-app --capabilities CAPABILITY_IAM --parameter-overrides MyParameterSample=MySampleValue
     env_file: .env
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock

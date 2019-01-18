@@ -24,7 +24,7 @@ const signals = {
   error: 'error'
 }
 
-const stages = {
+const roles = {
   initiator: 'initiator',
   receiver: 'receiver'
 }
@@ -37,4 +37,4 @@ const rtcSignals = {
   signal: 'signal'
 }
 
-export { signals, stages, rtcSignals }
+export { signals, roles, rtcSignals }

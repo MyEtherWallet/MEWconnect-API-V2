@@ -21,18 +21,31 @@ Resources:
     Type: AWS::DynamoDB::Table
     Properties:
       AttributeDefinitions:
+      - AttributeName: "connectionId"
+        AttributeType: "S"
       - AttributeName: "connId"
         AttributeType: "S"
       KeySchema:
-      - AttributeName: "connId"
+      - AttributeName: "connectionId"
         KeyType: "HASH"
       ProvisionedThroughput:
         ReadCapacityUnits: 5
         WriteCapacityUnits: 5
+      GlobalSecondaryIndexes:
+      - IndexName: "connIdIndex"
+        KeySchema:
+        - AttributeName: "connId"
+          KeyType: "HASH"
+        Projection:
+          ProjectionType: "ALL"
+        ProvisionedThroughput:
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 5
       SSESpecification:
         SSEEnabled: True
       StreamSpecification:
         StreamViewType: NEW_IMAGE
+
   ConnectionsTableStream:
     Type: AWS::Lambda::EventSourceMapping
     Properties:
@@ -64,6 +77,7 @@ Resources:
           - dynamodb:GetRecords
           - dynamodb:GetShardIterator
           - dynamodb:ListStreams
+          - dynamodb:Query
           Resource: 
           - "*"
       - Statement:
@@ -86,6 +100,12 @@ Resources:
       Policies:
       - DynamoDBCrudPolicy:
           TableName: !Ref ConnectionsTable
+      - Statement:
+        - Effect: Allow
+          Action:
+          - dynamodb:Query
+          Resource: 
+          - "*"
 
   OnDisconnectFunction:
     Type: AWS::Serverless::Function

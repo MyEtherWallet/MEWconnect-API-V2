@@ -36,7 +36,8 @@ export default (() => {
   }
 
   const query = async (params) => {
-
+    const queryParams = _.merge({TableName: TABLE_NAME}, params)
+    return await ddb.query(queryParams).promise()
   }
 
   return {
