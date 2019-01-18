@@ -1,11 +1,8 @@
 'use strict'
 
-import AWS from 'aws-sdk'
+import dynamoDocumentClient from '@util/aws/functions/dynamodb-document-client'
 import { validConnId, validHex, validRole } from '@util/validation'
 import { signals, stages } from '@util/signals'
-
-const ddb = new AWS.DynamoDB.DocumentClient({ apiVersion: '2012-08-10' })
-const { TABLE_NAME } = process.env
 
 /**
  * Handle an incoming WebSocket connection and update the dynamoDB database with pertinent information.
@@ -56,20 +53,17 @@ const handler = async (event, context) => {
  */
 const handleInitiator = async (connectionData) => {
   const putParams = {
-    TableName: TABLE_NAME,
-    Item: {
-      connId: connectionData.query.connId,
-      initiator: {
-        connectionId: connectionData.connectionId,
-        signed: connectionData.query.signed
-      },
-      signal: signals.initiated,
-      endpoint: connectionData.event.requestContext.domainName + '/' + connectionData.event.requestContext.stage
-    }
+    connId: connectionData.query.connId,
+    initiator: {
+      connectionId: connectionData.connectionId,
+      signed: connectionData.query.signed
+    },
+    signal: signals.initiated,
+    endpoint: connectionData.event.requestContext.domainName + '/' + connectionData.event.requestContext.stage
   }
 
   try {
-    await ddb.put(putParams).promise()
+    await dynamoDocumentClient.put(putParams)
     return { statusCode: 200, body: `Connected` }
   } catch (e) {
     return { statusCode: 500, body: `Failed to connect: ${JSON.stringify(e)}` }
@@ -93,17 +87,12 @@ const handleInitiator = async (connectionData) => {
 const handleReceiver = async (connectionData) => {
   let initiator
 
-  // Query for given @connId //
-  const queryParams = {
-    TableName: TABLE_NAME,
-    Key: {
-      connId: connectionData.query.connId
-    }
+  const getParams = {
+    connId: connectionData.query.connId
   }
 
-  // Perform query //
   try {
-    let entry = await ddb.get(queryParams).promise()
+    let entry = await dynamoDocumentClient.get(getParams)
     initiator = entry.Item.initiator
   } catch (e) {
     return { statusCode: 500, body: `Failed to connect: Connection pair doesn't exist!` }
@@ -114,22 +103,19 @@ const handleReceiver = async (connectionData) => {
 
   // Update entry with receiver information //
   const putParams = {
-    TableName: TABLE_NAME,
-    Item: {
-      connId: connectionData.query.connId,
-      initiator: initiator,
-      receiver: {
-        connectionId: connectionData.connectionId,
-        signed: connectionData.query.signed
-      },
-      signal: signals.confirmation,
-      endpoint: connectionData.event.requestContext.domainName + '/' + connectionData.event.requestContext.stage
-    }
+    connId: connectionData.query.connId,
+    initiator: initiator,
+    receiver: {
+      connectionId: connectionData.connectionId,
+      signed: connectionData.query.signed
+    },
+    signal: signals.confirmation,
+    endpoint: connectionData.event.requestContext.domainName + '/' + connectionData.event.requestContext.stage
   }
 
   // Perform update //
   try {
-    await ddb.put(putParams).promise()
+    await dynamoDocumentClient.put(putParams)
     return { statusCode: 200, body: `Connected` }
   } catch (e) {
     return { statusCode: 500, body: `Failed to connect: ${JSON.stringify(e)}` }
