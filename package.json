@@ -43,6 +43,7 @@
     "prepend-file": "^1.3.1",
     "promise-ws": "^1.0.0-1",
     "query-string": "^6.2.0",
+    "randomstring": "^1.1.5",
     "read-package-json": "^2.0.13",
     "secp256k1": "^3.6.1",
     "simple-peer": "^9.2.1",
@@ -63,7 +64,6 @@
     }
   },
   "dependencies": {
-    "randomstring": "^1.1.5",
     "validate": "^4.5.1"
   }
 }

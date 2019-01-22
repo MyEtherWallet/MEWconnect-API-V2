@@ -4,6 +4,7 @@
 import _ from 'lodash'
 import Peer from 'simple-peer'
 import queryString from 'query-string'
+import randomstring from 'randomstring'
 import WebSocketClient from 'promise-ws'
 import wrtc from 'wrtc'
 
@@ -64,7 +65,7 @@ let receiver = {
 /**
  * Connect to a given WebSocket @url
  * 
- * @param  {String} url - WSS connection URL
+ * @param  {Object} options - JSON-formatted connection query params
  * @return {Object} WebSocket Connection object
  */
 const connect = async (options = {}) => {
@@ -105,21 +106,19 @@ describe('Pairing', () => {
 
   /*
   ===================================================================================
-    2a. Pairing -> Initial Connection
+    1. Pairing -> Initial Connection
   ===================================================================================
   */
   describe('Initial Connection', () => {
     /*
     ===================================================================================
-      2a-1. Pairing -> Initial Connection -> Connect [Server → Initiator]
+      1a. Pairing -> Initial Connection -> Connect [Initiator → Server]
     ===================================================================================
     */
     describe('Connect [Initiator → Server]', () => {
-      let message
       let connectionOptions
 
       beforeAll(() => {
-        message = CryptoUtils.generateRandomMessage()
         connectionOptions = {
           role: roles.initiator,
           connId: connId,
@@ -129,7 +128,7 @@ describe('Pairing', () => {
 
       /*
       ===================================================================================
-        2a-1. Pairing -> Initial Connection -> Connect [Server → Initiator] -> FAIL
+        1a. Pairing -> Initial Connection -> Connect [Initiator → Server] -> FAIL
       ===================================================================================
       */
       describe('<FAIL>', () => {
@@ -140,7 +139,7 @@ describe('Pairing', () => {
             initiator.socket = await connect(options)
             throw new Error('Connected with missing @role property')
           } catch (e) {
-            pass(done)
+            done()
           }
         })
         it('Should not connect with invalid @role property', async done => {
@@ -150,7 +149,7 @@ describe('Pairing', () => {
             initiator.socket = await connect(options)
             throw new Error('Connected with invalid @role property')
           } catch (e) {
-            pass(done)
+            done()
           }
         })
         it('Should not connect with missing @connId property', async done => {
@@ -160,7 +159,7 @@ describe('Pairing', () => {
             initiator.socket = await connect(options)
             throw new Error('Connected with missing @connId property')
           } catch (e) {
-            pass(done)
+            done()
           }
         })
         it('Should not connect with invalid @connId property', async done => {
@@ -170,7 +169,7 @@ describe('Pairing', () => {
             initiator.socket = await connect(options)
             throw new Error('Connected with invalid @connId property')
           } catch (e) {
-            pass(done)
+            done()
           }
         })
         it('Should not connect with missing @signed property', async done => {
@@ -180,14 +179,14 @@ describe('Pairing', () => {
             initiator.socket = await connect(options)
             throw new Error('Connected with missing @signed property')
           } catch (e) {
-            pass(done)
+            done()
           }
         })
       })
 
       /*
       ===================================================================================
-        2a-1. Pairing -> Initial Connection -> Connect [Server → Initiator] -> SUCCESS
+        1a. Pairing -> Initial Connection -> Connect [Initiator → Server] -> SUCCESS
       ===================================================================================
       */
       describe('<SUCCESS>', () => {
@@ -198,6 +197,135 @@ describe('Pairing', () => {
             done()
           } catch (e) {
             throw new Error('Failed to connect with valid connection options')
+          }
+        })
+      })
+    })
+
+    /*
+    ===================================================================================
+      1b. Pairing -> Initial Connection -> Connect [Receiver → Server]
+    ===================================================================================
+    */
+    describe('Connect [Receiver → Server]', () => {
+      let connectionOptions
+
+      beforeAll(() => {
+        connectionOptions = {
+          role: roles.receiver,
+          connId: connId,
+          signed: signed
+        }
+      })
+
+      /*
+      ===================================================================================
+        1b. Pairing -> Initial Connection -> Connect [Receiver → Server] -> FAIL
+      ===================================================================================
+      */
+      describe('<FAIL>', () => {
+        it('Should not connect with missing @role property', async done => {
+          let options = _.cloneDeep(connectionOptions)
+          delete options.role
+          try {
+            receiver.socket = await connect(options)
+            throw new Error('Connected with missing @role property')
+          } catch (e) {
+            done()
+          }
+        })
+        it('Should not connect with invalid @role property', async done => {
+          let options = _.cloneDeep(connectionOptions)
+          options.role = 'invalid'
+          try {
+            receiver.socket = await connect(options)
+            throw new Error('Connected with invalid @role property')
+          } catch (e) {
+            done()
+          }
+        })
+        it('Should not connect with missing @connId property', async done => {
+          let options = _.cloneDeep(connectionOptions)
+          delete options.connId
+          try {
+            receiver.socket = await connect(options)
+            throw new Error('Connected with missing @connId property')
+          } catch (e) {
+            done()
+          }
+        })
+        it('Should not connect with invalid @connId property', async done => {
+          let options = _.cloneDeep(connectionOptions)
+          options.connId = 'invalid'
+          try {
+            receiver.socket = await connect(options)
+            throw new Error('Connected with invalid @connId property')
+          } catch (e) {
+            done()
+          }
+        })
+        it('Should not connect with unmatched @connId property', async done => {
+          let options = _.cloneDeep(connectionOptions)
+          options.connId = options.connId.slice(0, -10) + 'abcdeabcde' 
+          try {
+            receiver.socket = await connect(options)
+            throw new Error('Connected with unmatched @connId property')
+          } catch (e) {
+            done()
+          }
+        })
+        it('Should not connect with missing @signed property', async done => {
+          let options = _.cloneDeep(connectionOptions)
+          delete options.signed
+          try {
+            receiver.socket = await connect(options)
+            throw new Error('Connected with missing @signed property')
+          } catch (e) {
+            done()
+          }
+        })
+        it('Should not connect with unmatched @signed property', async done => {
+          let options = _.cloneDeep(connectionOptions)
+          options.signed = randomstring.generate(32)
+          try {
+            receiver.socket = await connect(options)
+            throw new Error('Connected with unmatched @signed property')
+          } catch (e) {
+            done()
+          }
+        })
+      })
+
+      /*
+      ===================================================================================
+        1b. Pairing -> Initial Connection -> Connect [Receiver → Server] -> SUCCESS
+      ===================================================================================
+      */
+      describe('<SUCCESS>', () => {
+        it('Should initiate socket connection', async done => {
+          let options = _.cloneDeep(connectionOptions)
+          try {
+            receiver.socket = await connect(options)
+            done()
+          } catch (e) {
+            throw new Error('Failed to connect with valid connection options')
+          }
+        })
+      })
+
+      /*
+      ===================================================================================
+        1b. Pairing -> Initial Connection -> Connect [Receiver → Server] -> FAIL (ROUND 2)
+      ===================================================================================
+      */
+      describe('<FAIL>', () => {
+        it('Should not be able to connect twice', async done => {
+          let options = _.cloneDeep(connectionOptions)
+          try {
+            receiver.socket = await connect(options)
+            throw new Error('Connected with same credentials twice')
+          } catch (e) {
+            done()
           }
         })
       })
