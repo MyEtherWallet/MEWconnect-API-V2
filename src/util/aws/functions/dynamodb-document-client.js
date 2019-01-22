@@ -10,7 +10,7 @@ export default (() => {
   /**
    * Abstracted DynamoDBDocumentClient get() request.
    * 
-   * @param  {Object} params - Key{key: value}
+   * @param  {Object} params - Key{key: value, ...}
    * @return {Object} - DynamoDB Document
    */
   const get = async (params) => {
@@ -35,14 +35,34 @@ export default (() => {
     return await ddb.put(putParams).promise()
   }
 
+  /**
+   * Abstracted DynamoDBDocumentClient query() request
+   * 
+   * @param  {Object} params - Item{key: value, ...}
+   * @return {Object} - DynamoDB Document
+   */
   const query = async (params) => {
     const queryParams = _.merge({TableName: TABLE_NAME}, params)
     return await ddb.query(queryParams).promise()
   }
 
+  /**
+   * Abstracted DynamoDBDocumentClient delete() request
+   * 
+   * @param  {Object} params - Item{key: value}
+   */
+  const del = async (params) => {
+    const deleteParams = {
+      TableName: TABLE_NAME,
+      Key: params
+    }
+    return await ddb.delete(deleteParams).promise()
+  }
+
   return {
     get,
     put,
-    query
+    query,
+    delete: del
   }
 })()

@@ -1,14 +1,17 @@
 'use strict'
 
-import query from '@util/query'
 import dynamoDocumentClient from '@util/aws/functions/dynamodb-document-client'
 import postMessage from '@util/aws/functions/post-message'
+import query from '@util/aws/functions/query'
 import { signals, roles } from '@util/signals'
 
 /**
  * On DynamoDB entry trigger, handle/process the event according to the client's role.
  * 
  * @param  {Object} event - Event object passed from AWS
+ * @param  {Array} event.Records - The DB entry that triggered this event. Because the threshold
+ *                                 is set to 1, this will be an array of 1 record, with the 0 index
+ *                                 being the most recently triggered entry.
  */
 const handler = async (event, context) => {
   const record = event.Records[0]

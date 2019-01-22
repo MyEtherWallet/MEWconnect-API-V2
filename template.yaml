@@ -151,26 +151,6 @@ Resources:
           Resource:
           - 'arn:aws:execute-api:*:*:*/@connections/*'
 
-  SendMessageFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: dist/lambda/sendmessage/
-      Handler: app.handler
-      MemorySize: 256
-      Runtime: nodejs8.10
-      Environment:
-        Variables:
-          TABLE_NAME: !Ref ConnectionsTable
-      Policies:
-      - DynamoDBCrudPolicy:
-          TableName: !Ref ConnectionsTable
-      - Statement:
-        - Effect: Allow
-          Action:
-          - 'execute-api:ManageConnections'
-          Resource:
-          - 'arn:aws:execute-api:*:*:*/@connections/*'
-
 Outputs:
   ConnectionsTableArn:
     Description: "Connections table ARN"
@@ -180,10 +160,14 @@ Outputs:
     Description: "OnConnect function ARN"
     Value: !GetAtt OnConnectFunction.Arn
 
+  OnDbEntryFunctionArn:
+    Description: "OnDbEntry function ARN"
+    Value: !GetAtt OnDbEntryFunction.Arn
+
+  OnOfferSignalFunctionArn:
+    Description: "OnOfferSignal function ARN"
+    Value: !GetAtt OnOfferSignalFunction.Arn
+
   OnDisconnectFunctionArn:
     Description: "OnDisconnect function ARN"
     Value: !GetAtt OnDisconnectFunction.Arn
-
-  SendMessageFunctionArn:
-    Description: "SendMessage function ARN"
-    Value: !GetAtt SendMessageFunction.Arn
