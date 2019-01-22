@@ -6,12 +6,12 @@ import query from '@util/aws/functions/query'
 import { signals, roles } from '@util/signals'
 
 /**
- * Upon receiving signals.offerSignal from the initiator, relay the message payload
- * to the receiver so that they can create an answer to webRTC offer.
+ * Upon receiving signals.answerSignal from the receiver, relay the message payload
+ * to the initiator so that they can establish a P2P WebRTC connection with the receiver.
  * 
  * @param  {Object} event - Original connection event payload from AWS
  * @param  {String} event.body - Payload object string to parse
- * @param  {Object} event.body.data - The actual payload sent by the initiator
+ * @param  {Object} event.body.data - The actual payload sent by the receiver
  */
 const handler = async (event, context) => {
   const connectionId = event.requestContext.connectionId
@@ -20,17 +20,19 @@ const handler = async (event, context) => {
 
   const entry = await query.byConnectionId(connectionId)
   const pair = await query.byConnId(entry.connId)
-  const receiver = pair.find(obj => {
-    return obj.role === roles.receiver
+  const initiator = pair.find(obj => {
+    return obj.role === roles.initiator
   })
 
-  const postData = {
-  	signal: signals.offer,
-  	data: data,
-  	message: 'Initiator sent WebRTC Offer. Please respond.'
-  }
 
-  await postMessage(endpoint, receiver.connectionId, postData)
+  const postData = {
+    signal: signals.answer,
+    data: data,
+    message: 'Receiver sent WebRTC Answer.'
+  }
+  console.log('yyyy', initiator, postData)
+
+  await postMessage(endpoint, initiator.connectionId, postData)
   return { statusCode: 200, body: 'Data Sent' }
 }
 
