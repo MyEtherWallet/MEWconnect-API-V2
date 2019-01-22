@@ -10,7 +10,13 @@
     "build": "rimraf dist/ && babel ./src --out-dir dist/ --copy-files && npm run compile-modules",
     "package": "npm run build && docker-compose run aws-sam-package",
     "deploy": "npm run package && docker-compose run aws-sam-deploy",
-    "update": "npm run package && docker-compose run aws-sam-update"
+    "update": "npm run package && docker-compose run aws-sam-update",
+    "test": "NODE_ENV=test CONNECTION_TIMEOUT=250 jest --detectOpenHandles --forceExit --runInBand --verbose --silent --noStackTrace",
+    "test:verbose": "NODE_ENV=test CONNECTION_TIMEOUT=250 jest --detectOpenHandles --forceExit --runInBand --verbose",
+    "test:debug": "NODE_ENV=test CONNECTION_TIMEOUT=250 DEBUG=* jest --detectOpenHandles --forceExit --runInBand --verbose",
+    "test:bail": "NODE_ENV=test CONNECTION_TIMEOUT=250 jest --bail --detectOpenHandles --forceExit --runInBand --verbose",
+    "test:unit": "npm test -- tests/unit",
+    "test:integration": "npm test -- tests/integration"
   },
   "repository": {
     "type": "git",
@@ -23,24 +29,40 @@
     "babel-plugin-transform-object-rest-spread": "^6.26.0",
     "babel-preset-es2015": "^6.24.1",
     "bluebird": "^3.5.3",
+    "crypto": "^1.0.1",
+    "eccrypto": "^1.1.0",
+    "ethereumjs-util": "^6.0.0",
     "find-imports": "^1.1.0",
     "find-requires": "^0.2.4",
     "fs-extra": "^7.0.1",
+    "jest": "^23.6.0",
     "lodash": "^4.17.11",
     "module-alias": "^2.1.0",
     "node-cmd": "^3.0.0",
     "node-dir": "^0.1.17",
     "prepend-file": "^1.3.1",
+    "promise-ws": "^1.0.0-1",
+    "query-string": "^6.2.0",
     "read-package-json": "^2.0.13",
-    "write-pkg": "^3.2.0"
+    "secp256k1": "^3.6.1",
+    "simple-peer": "^9.2.1",
+    "write-pkg": "^3.2.0",
+    "wrtc": "^0.3.5"
   },
   "_moduleAliases": {
     "@": "dist",
     "@lambda": "dist/lambda",
     "@util": "dist/util"
   },
+  "jest": {
+    "testEnvironment": "node",
+    "moduleNameMapper": {
+      "@signals(.*)$": "<rootDir>/dist/util/signals$1",
+      "@utils(.*)$": "<rootDir>/test/utils$1",
+      "@/(.*)$": "<rootDir>dist$1"
+    }
+  },
   "dependencies": {
-    "crypto": "^1.0.1",
     "randomstring": "^1.1.5",
     "validate": "^4.5.1"
   }

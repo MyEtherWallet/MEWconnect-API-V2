@@ -24,13 +24,11 @@ const handler = async (event, context) => {
     return obj.role === roles.initiator
   })
 
-
   const postData = {
     signal: signals.answer,
     data: data,
     message: 'Receiver sent WebRTC Answer.'
   }
-  console.log('yyyy', initiator, postData)
 
   await postMessage(endpoint, initiator.connectionId, postData)
   return { statusCode: 200, body: 'Data Sent' }
