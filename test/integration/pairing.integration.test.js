@@ -10,7 +10,7 @@ import wrtc from 'wrtc'
 
 // Libs //
 import CryptoUtils from '@utils/crypto-utils'
-import { signals, roles } from '@signals'
+import { signals, rtcSignals, roles } from '@signals'
 
 /*
 ===================================================================================
@@ -45,7 +45,8 @@ let initiator = {
   socket: {},
   version: {},
   peer: {},
-  answer: {}
+  answer: {},
+  listener: {}
 }
 
 // Receiver Object //
@@ -53,7 +54,8 @@ let receiver = {
   socket: {},
   version: {},
   peer: {},
-  offer: {}
+  offer: {},
+  listener: {}
 }
 
 /*
@@ -72,6 +74,30 @@ const connect = async (options = {}) => {
   let url = `${websocketURL}${queryString.stringify(options)}`
   let connection = await WebSocketClient.create(url)
   return connection
+}
+
+/**
+ * Set an 'on message' listener function for a given role (initiator or receiver)
+ * 
+ * @param  {Object} role - initiator or receiver object
+ * @param  {Function} fn - Function to perform on message
+ */
+const setListener = async (role, fn) => {
+  role.listener = fn
+  role.socket.on('message', fn)
+}
+
+/**
+ * Remove 'on message' listener function for a given role (initiator or receiver)
+ * 
+ * @param  {Object} role - initiator or receiver object
+ */
+const removeListener = async (role) => {
+  try {
+    role.socket.removeListener('message', role.listener)
+  } catch (e) {
+    // No listener
+  }
 }
 
 /**
@@ -101,6 +127,12 @@ describe('Pairing', () => {
     signed = CryptoUtils.signMessage(privateKey, privateKey)
     versionObject = await CryptoUtils.encrypt(version, privateKey)
 
+    done()
+  })
+
+  afterEach(async done => {
+    removeListener(initiator)
+    removeListener(receiver)
     done()
   })
 
@@ -194,9 +226,31 @@ describe('Pairing', () => {
           let options = _.cloneDeep(connectionOptions)
           try {
             initiator.socket = await connect(options)
-            done()
+            setListener(initiator, async msg => {
+              const message = JSON.parse(msg)
+              const signal = message.signal
+              expect(signal).toBe(signals.initiated)
+              done()
+            })
           } catch (e) {
             throw new Error('Failed to connect with valid connection options')
+          }
+        })
+      })
+
+       /*
+      ===================================================================================
+        1b. Pairing -> Initial Connection -> Connect [Initiator → Server] -> FAIL (ROUND 2)
+      ===================================================================================
+      */
+      describe('<FAIL>', () => {
+        it('Should not be able to connect twice with the same credentials', async done => {
+          let options = _.cloneDeep(connectionOptions)
+          try {
+            initiator.socket = await connect(options)
+            throw new Error('Connected with same credentials twice')
+          } catch (e) {
+            done()
           }
         })
       })
@@ -306,6 +360,32 @@ describe('Pairing', () => {
           let options = _.cloneDeep(connectionOptions)
           try {
             receiver.socket = await connect(options)
+
+            let receiverPromise = new Promise((resolve, reject) => {
+              setListener(receiver, async msg => {
+                const message = JSON.parse(msg)
+                const signal = message.signal
+                expect(signal).toBe(signals.confirmation)
+                resolve()
+              })
+            })
+
+            let initiatorPromise = new Promise((resolve, reject) => {
+              setListener(initiator, async msg => {
+                const message = JSON.parse(msg)
+                const signal = message.signal
+                expect(signal).toBe(signals.confirmation)
+                resolve()
+              })
+            })
+            
+            // Await promises from both receiver and initiator //
+            await Promise.all([
+              receiverPromise,
+              initiatorPromise
+            ])
+
+            // Success //
             done()
           } catch (e) {
             throw new Error('Failed to connect with valid connection options')
@@ -319,7 +399,7 @@ describe('Pairing', () => {
       ===================================================================================
       */
       describe('<FAIL>', () => {
-        it('Should not be able to connect twice', async done => {
+        it('Should not be able to connect twice with the same credentials', async done => {
           let options = _.cloneDeep(connectionOptions)
           try {
             receiver.socket = await connect(options)
@@ -327,6 +407,155 @@ describe('Pairing', () => {
           } catch (e) {
             done()
           }
+        })
+      })
+    })
+  })
+
+  /*
+  ===================================================================================
+    2. Pairing -> Offer Creation
+  ===================================================================================
+  */
+  describe('Offer Creation', () => {
+    /*
+    ===================================================================================
+      2a. Pairing -> Offer Creation -> OfferSignal [Initiator → Server]
+    ===================================================================================
+    */
+    describe('OfferSignal [Initiator → Server]', () => {
+      let encryptedData
+      let offerPayload
+
+      beforeAll(async done => {
+        encryptedData = await CryptoUtils.encrypt(version, privateKey)
+        offerPayload = {
+          data: encryptedData,
+          connId: connId,
+          options: stunServers
+        }
+        done()
+      })
+
+      /*
+      ===================================================================================
+        2a. Pairing -> Offer Creation -> OfferSignal [Initiator → Server] -> FAIL
+      ===================================================================================
+      */
+      describe('<FAIL>', () => {
+        it('Should not succeed with missing @data property', async done => {
+          let clonedPayload = _.cloneDeep(offerPayload)
+          delete clonedPayload.data
+          let payload = JSON.stringify({
+            action: 'offersignal',
+            data: clonedPayload
+          })
+          try {
+            await initiator.socket.send(payload)
+            setListener(receiver, async msg => {
+              throw new Error('Succeeded with missing @data property')
+            })             
+          } catch (e) {
+            done()
+          }
+          pass(done)
+        })
+        it('Should not succeed with invalid @data property', async done => {
+          let clonedPayload = _.cloneDeep(offerPayload)
+          clonedPayload.data = 'invalid'
+          let payload = JSON.stringify({
+            action: 'offersignal',
+            data: clonedPayload
+          })
+          try {
+            await initiator.socket.send(payload)
+            setListener(receiver, async msg => {
+              throw new Error('Succeeded with invalid @data property')
+            })             
+          } catch (e) {
+            done()
+          }
+          pass(done)
+        })
+        it('Should not succeed with missing @connId property', async done => {
+          let clonedPayload = _.cloneDeep(offerPayload)
+          delete clonedPayload.connId
+          let payload = JSON.stringify({
+            action: 'offersignal',
+            data: clonedPayload
+          })
+          try {
+            await initiator.socket.send(payload)
+            setListener(receiver, async msg => {
+              throw new Error('Succeeded with missing @connId property')
+            })             
+          } catch (e) {
+            done()
+          }
+          pass(done)
+        })
+        it('Should not succeed with invalid @connId property', async done => {
+          let clonedPayload = _.cloneDeep(offerPayload)
+          clonedPayload.connId = 'invalid'
+          let payload = JSON.stringify({
+            action: 'offersignal',
+            data: clonedPayload
+          })
+          try {
+            await initiator.socket.send(payload)
+            setListener(receiver, async msg => {
+              throw new Error('Succeeded with invalid @connId property')
+            })             
+          } catch (e) {
+            done()
+          }
+          pass(done)
+        })
+      })
+
+      /*
+      ===================================================================================
+        2a. Pairing -> Offer Creation -> OfferSignal [Initiator → Server] -> SUCCESS
+      ===================================================================================
+      */
+      describe('<SUCCESS>', () => {
+        it('Should send an offer and server list to the SignalServer for retransmission to the receiver', async done => {
+          // Add initiator property to default options //
+          let webRTCOptions = {
+            initiator: true,
+            ...defaultWebRTCOptions
+          }
+
+          // Create initiator WebRTC peer //
+          initiator.peer = new Peer(webRTCOptions)
+          initiator.peer.on(rtcSignals.signal, async data => {
+            expect(data).toHaveProperty('type')
+            expect(data).toHaveProperty('sdp')
+
+            // Send WebRTC offer as encrypted string //
+            let encryptedSend = await CryptoUtils.encrypt(
+              JSON.stringify(data),
+              privateKey
+            )
+
+            // Emit offer signal for receiver //
+            let payload = JSON.stringify({
+              action: 'offersignal',
+              data: _.cloneDeep(offerPayload)
+            })
+
+            try {
+              await initiator.socket.send(payload)
+              setListener(receiver, async msg => {
+                const message = JSON.parse(msg)
+                const signal = message.signal
+                expect(signal).toBe(signals.offer)
+                done()
+              })             
+            } catch (e) {
+              throw new Error('Failed to send offerSignal')
+            }
+          })
         })
       })
     })

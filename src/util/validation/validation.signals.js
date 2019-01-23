@@ -2,7 +2,7 @@
 
 import Schema from 'validate'
 
-const wholeEncrypted = ['answerSignal', 'offerSignal']
+const wholeEncrypted = ['answersignal', 'offersignal']
 const signature = 'signature'
 const rtcConnected = 'rtcConnected'
 const tryTurn = 'tryTurn'
@@ -143,23 +143,25 @@ const tryTurnValidator = new Schema({
   }
 })
 
-const validateSignal = message => {
+const validateSignal = async message => {
+  const signal = message.signal
+  const data = message.data
   return new Promise((resolve, reject) => {
     let errors
-    if (wholeEncrypted.includes(message[0])) {
-      errors = encryptedValidator.validate(message[1])
-    } else if (message[0] === signature) {
-      errors = signatureValidator.validate(message[1])
-    } else if (message[0] === rtcConnected) {
-      errors = rtcConnectedValidator.validate(message[1])
-    } else if (message[0] === tryTurn) {
-      errors = tryTurnValidator.validate(message[1])
+    if (wholeEncrypted.includes(signal)) {
+      errors = encryptedValidator.validate(data)
+    } else if (signal === signature) {
+      errors = signatureValidator.validate(data)
+    } else if (signal === rtcConnected) {
+      errors = rtcConnectedValidator.validate(data)
+    } else if (signal === tryTurn) {
+      errors = tryTurnValidator.validate(data)
     } else {
       reject(errors)
     }
 
-    if (message[1].options !== undefined && message[1].options !== null) {
-      if (!optionsCheck(message[1].options)) {
+    if (data.options !== undefined && data.options !== null) {
+      if (!optionsCheck(data.options)) {
         if (!errors) errors = []
         errors.push('Invalid Options Field')
       }
