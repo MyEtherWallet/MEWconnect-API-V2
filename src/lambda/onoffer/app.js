@@ -4,10 +4,11 @@ import dynamoDocumentClient from '@util/aws/functions/dynamodb-document-client'
 import postMessage from '@util/aws/functions/post-message'
 import query from '@util/aws/functions/query'
 import { signals, roles } from '@util/signals'
+import { validateSignal } from '@util/validation'
 
 /**
- * Upon receiving signals.offerSignal from the initiator, relay the message payload
- * to the receiver so that they can create an answer to webRTC offer.
+ * Upon receiving signals.offerSignal from the initiator, validate the payload,
+ * and relay the message payload to the receiver so that they can create an answer to webRTC offer.
  * 
  * @param  {Object} event - Original connection event payload from AWS
  * @param  {String} event.body - Payload object string to parse
@@ -16,7 +17,17 @@ import { signals, roles } from '@util/signals'
 const handler = async (event, context) => {
   const connectionId = event.requestContext.connectionId
   const endpoint = event.requestContext.domainName + '/' + event.requestContext.stage
-  const message = JSON.parse(event.body).data
+  const body = JSON.parse(event.body)
+  const data = body.data
+
+  try {
+    await validateSignal({
+      signal: event.requestContext.routeKey,
+      data: data
+    })
+  } catch (e) {
+    return { statusCode: 500, body: 'Invalid signal params' }
+  }
 
   const entry = await query.byConnectionId(connectionId)
   const pair = await query.byConnId(entry.connId)
@@ -26,7 +37,7 @@ const handler = async (event, context) => {
 
   const postData = {
   	signal: signals.offer,
-  	data: message,
+  	data: data.data,
   	message: 'Initiator sent WebRTC Offer. Please respond.'
   }
 

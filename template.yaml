@@ -151,6 +151,36 @@ Resources:
           Resource:
           - 'arn:aws:execute-api:*:*:*/@connections/*'
 
+  OnAnswerSignalFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/lambda/onanswer/
+      Handler: app.handler
+      MemorySize: 256
+      Runtime: nodejs8.10
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref ConnectionsTable
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName: !Ref ConnectionsTable
+      - Statement:
+        - Effect: Allow
+          Action:
+          - dynamodb:DescribeStream
+          - dynamodb:GetRecords
+          - dynamodb:GetShardIterator
+          - dynamodb:ListStreams
+          - dynamodb:Query
+          Resource: 
+          - "*"
+      - Statement:
+        - Effect: Allow
+          Action:
+          - 'execute-api:ManageConnections'
+          Resource:
+          - 'arn:aws:execute-api:*:*:*/@connections/*'
+
 Outputs:
   ConnectionsTableArn:
     Description: "Connections table ARN"
@@ -167,6 +197,10 @@ Outputs:
   OnOfferSignalFunctionArn:
     Description: "OnOfferSignal function ARN"
     Value: !GetAtt OnOfferSignalFunction.Arn
+
+  OnAnswerSignalFunctionArn:
+    Description: "OnAnswerSignal function ARN"
+    Value: !GetAtt OnAnswerSignalFunction.Arn
 
   OnDisconnectFunctionArn:
     Description: "OnDisconnect function ARN"
