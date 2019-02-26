@@ -13,15 +13,42 @@ import CryptoUtils from '@utils/crypto-utils'
 import { signals, rtcSignals, roles } from '@signals'
 
 /*
+|--------------------------------------------------------------------------
+|
+| MewConnect Pairing Integration Tests
+|
+|--------------------------------------------------------------------------
+|
+| The goal of these integration tests are to ensure the functionality of the MewConnect Pairing Server.
+| The Pairing Server attempts to pair two "signaling" peers together via a secure socket connection,
+| via AWS Lambda Websockets.
+| These peers will then establish a webRTC connection to each other, allowing
+| secure communication using the credentials created during the pairing process.
+|
+| The tests attempt to mirror the process defined in the following documentation outline:
+| https://docs.google.com/document/d/19acrYB3iLT4j9JDg0xGcccLXFenqfSlNiKVpXOdLL6Y
+|
+| There are (4) primary processes that must be tested:
+|
+| 1. Initial Websocket Connection
+| 2. WebRTC Offer Creation
+| 3. WebRtc Answer Creation
+| 4. WebRTC Connection
+|
+*/
+
+/*
 ===================================================================================
   Test "Member Variables"
 ===================================================================================
 */
 
 // WebSocket URL Address //
+// TODO: .env config //
 const websocketURL = 'wss://22jmo882mb.execute-api.us-west-1.amazonaws.com/dev?'
 
 // WebRTC Variables //
+// TODO: .env config //
 const stunServers = [{ urls: 'stun:global.stun.twilio.com:3478?transport=udp' }]
 const defaultWebRTCOptions = {
   trickle: false,
@@ -96,7 +123,7 @@ const removeListener = async (role) => {
   try {
     role.socket.removeListener('message', role.listener)
   } catch (e) {
-    // No listener
+    // No listener, no worries
   }
 }
 
@@ -130,6 +157,9 @@ describe('Pairing', () => {
     done()
   })
 
+  /**
+   * After each test, remove any listener that may have been attached during that discrete test
+   */
   afterEach(async done => {
     removeListener(initiator)
     removeListener(receiver)
@@ -437,6 +467,47 @@ describe('Pairing', () => {
         done()
       })
 
+      /**
+       * Attempt to send an initiator "offersignal" to server with a given @payload.
+       * Resolve on successful response, reject if error.
+       */
+      const attemptOffer = async (payload) => {
+        return new Promise(async (resolve, reject) => {
+          const message = JSON.stringify({
+            action: 'offersignal',
+            data: payload
+          })
+          try {
+            await initiator.socket.send(message)
+            setListener(receiver, async msg => {
+              resolve(msg)
+            })
+          } catch (e) {
+            reject(e)
+          }
+        })
+      }
+
+      /**
+       * Attempts to establish an initiator webRTC connection.
+       * Resolve on success. Timeout/fail on error.
+       */
+      const connectInitiatorWebRTC = async () => {
+        return new Promise((resolve, reject) => {
+          // Add initiator property to default options //
+          let webRTCOptions = {
+            initiator: true,
+            ...defaultWebRTCOptions
+          }
+
+          // Create initiator WebRTC peer //
+          initiator.peer = new Peer(webRTCOptions)
+          initiator.peer.on(rtcSignals.signal, data => {
+            resolve(data)
+          })
+        })
+      }
+
       /*
       ===================================================================================
         2a. Pairing -> Offer Creation -> OfferSignal [Initiator → Server] -> FAIL
@@ -446,69 +517,33 @@ describe('Pairing', () => {
         it('Should not succeed with missing @data property', async done => {
           let clonedPayload = _.cloneDeep(offerPayload)
           delete clonedPayload.data
-          let payload = JSON.stringify({
-            action: 'offersignal',
-            data: clonedPayload
-          })
-          try {
-            await initiator.socket.send(payload)
-            setListener(receiver, async msg => {
-              throw new Error('Succeeded with missing @data property')
-            })             
-          } catch (e) {
-            done()
-          }
+          attemptOffer(clonedPayload)
+            .then(()=> { throw new Error('Succeeded with missing @data property') })
+            .catch(done)
           pass(done)
         })
         it('Should not succeed with invalid @data property', async done => {
           let clonedPayload = _.cloneDeep(offerPayload)
           clonedPayload.data = 'invalid'
-          let payload = JSON.stringify({
-            action: 'offersignal',
-            data: clonedPayload
-          })
-          try {
-            await initiator.socket.send(payload)
-            setListener(receiver, async msg => {
-              throw new Error('Succeeded with invalid @data property')
-            })             
-          } catch (e) {
-            done()
-          }
+          attemptOffer(clonedPayload)
+            .then(()=> { throw new Error('Succeeded with invalid @data property') })
+            .catch(done)
           pass(done)
         })
         it('Should not succeed with missing @connId property', async done => {
           let clonedPayload = _.cloneDeep(offerPayload)
           delete clonedPayload.connId
-          let payload = JSON.stringify({
-            action: 'offersignal',
-            data: clonedPayload
-          })
-          try {
-            await initiator.socket.send(payload)
-            setListener(receiver, async msg => {
-              throw new Error('Succeeded with missing @connId property')
-            })             
-          } catch (e) {
-            done()
-          }
+          attemptOffer(clonedPayload)
+            .then(()=> { throw new Error('Succeeded with missing @connId property') })
+            .catch(done)
           pass(done)
         })
         it('Should not succeed with invalid @connId property', async done => {
           let clonedPayload = _.cloneDeep(offerPayload)
           clonedPayload.connId = 'invalid'
-          let payload = JSON.stringify({
-            action: 'offersignal',
-            data: clonedPayload
-          })
-          try {
-            await initiator.socket.send(payload)
-            setListener(receiver, async msg => {
-              throw new Error('Succeeded with invalid @connId property')
-            })             
-          } catch (e) {
-            done()
-          }
+          attemptOffer(clonedPayload)
+            .then(()=> { throw new Error('Succeeded with invalid @connId property') })
+            .catch(done)
           pass(done)
         })
       })
@@ -520,41 +555,303 @@ describe('Pairing', () => {
       */
       describe('<SUCCESS>', () => {
         it('Should send an offer and server list to the SignalServer for retransmission to the receiver', async done => {
-          // Add initiator property to default options //
-          let webRTCOptions = {
-            initiator: true,
-            ...defaultWebRTCOptions
-          }
 
-          // Create initiator WebRTC peer //
-          initiator.peer = new Peer(webRTCOptions)
-          initiator.peer.on(rtcSignals.signal, async data => {
-            expect(data).toHaveProperty('type')
-            expect(data).toHaveProperty('sdp')
+          const webRTCDetails = await connectInitiatorWebRTC()
+          
+          // Send WebRTC offer as encrypted string //
+          const encryptedSend = await CryptoUtils.encrypt(
+            JSON.stringify(webRTCDetails),
+            privateKey
+          )
 
-            // Send WebRTC offer as encrypted string //
-            let encryptedSend = await CryptoUtils.encrypt(
-              JSON.stringify(data),
+          // Set payload data //
+          let clonedPayload = _.cloneDeep(offerPayload)
+          clonedPayload.data = encryptedSend
+
+          // Emit offer signal for receiver and check properties //
+          try {
+            const offerResponse = await attemptOffer(clonedPayload)
+            const offerMessage = JSON.parse(offerResponse)
+            const signal = offerMessage.signal
+            const data = offerMessage.data
+            const offer = data.data
+            const decryptedOffer = await CryptoUtils.decrypt(
+              offer,
               privateKey
             )
+            const expectedVersionProperties = ['type', 'sdp']
 
-            // Emit offer signal for receiver //
-            let payload = JSON.stringify({
-              action: 'offersignal',
-              data: _.cloneDeep(offerPayload)
+            receiver.offer = JSON.parse(decryptedOffer)
+
+            expect(signal).toBe(signals.offer)
+            expect(Object.keys(receiver.offer)).toEqual(
+              expect.arrayContaining(expectedVersionProperties)
+            )
+
+            done()
+          } catch (e) {
+            throw new Error('Failed to send offerSignal')
+          }
+        })
+      })
+    })
+  })
+
+  /*
+  ===================================================================================
+    3. Pairing -> Answer Creation
+  ===================================================================================
+  */
+  describe('Answer Creation', () => {
+    const webRTCOptions = {
+      ...defaultWebRTCOptions
+    }
+
+    /*
+    ===================================================================================
+      3a. Pairing -> Answer Creation -> AnswerSignal [Receiver → Server]
+    ===================================================================================
+    */
+    describe('AnswerSignal [Receiver → Server]', () => {
+      let encryptedData
+      let answerPayload
+
+      beforeAll(async done => {
+        encryptedData = await CryptoUtils.encrypt(version, privateKey)
+        answerPayload = {
+          data: encryptedData,
+          connId: connId
+        }
+        done()
+      })
+
+      /**
+       * Attempt to send a receiver "answersignal" to server with a given @payload.
+       * Resolve on successful response, reject if error.
+       */
+      const attemptAnswer = async (payload) => {
+        return new Promise(async (resolve, reject) => {
+          const message = JSON.stringify({
+            action: 'answersignal',
+            data: payload
+          })
+          try {
+            await receiver.socket.send(message)
+            setListener(initiator, async msg => {
+              resolve(msg)
             })
+          } catch (e) {
+            reject(e)
+          }
+        })
+      }
 
-            try {
-              await initiator.socket.send(payload)
-              setListener(receiver, async msg => {
-                const message = JSON.parse(msg)
-                const signal = message.signal
-                expect(signal).toBe(signals.offer)
-                done()
-              })             
-            } catch (e) {
-              throw new Error('Failed to send offerSignal')
-            }
+      /**
+       * Attempts to establish a receiver webRTC connection using offer data sent by initiator.
+       * Resolve on success. Timeout/fail on error.
+       */
+      const connectReceiverWebRTC = async () => {
+        return new Promise((resolve, reject) => {
+          receiver.peer = new Peer(webRTCOptions)
+          receiver.peer.signal(receiver.offer)
+          receiver.peer.on(rtcSignals.signal, data => {
+            resolve(data)
+          })
+        })
+      }
+
+      /*
+      ===================================================================================
+        3a. Pairing -> Answer Creation -> AnswerSignal [Receiver → Server] -> FAIL
+      ===================================================================================
+      */
+      describe('<FAIL>', () => {
+        it('Should not connect with missing @data property', async done => {
+          let clonedPayload = _.cloneDeep(answerPayload)
+          delete clonedPayload.data
+          attemptAnswer(clonedPayload)
+            .then(()=> { throw new Error('Succeeded with missing @data property') })
+            .catch(done)
+          pass(done)
+        })
+        it('Should not connect with invalid @data property', async done => {
+          let clonedPayload = _.cloneDeep(answerPayload)
+          clonedPayload.data = 'invalid'
+          attemptAnswer(clonedPayload)
+            .then(()=> { throw new Error('Succeeded with invalid @data property') })
+            .catch(done)
+          pass(done)
+        })
+        it('Should not connect with missing @connId property', async done => {
+          let clonedPayload = _.cloneDeep(answerPayload)
+          delete clonedPayload.connId
+          attemptAnswer(clonedPayload)
+            .then(()=> { throw new Error('Succeeded with missing @connId property') })
+            .catch(done)
+          pass(done)
+        })
+        it('Should not connect with invalid @connId property', async done => {
+          let clonedPayload = _.cloneDeep(answerPayload)
+          clonedPayload.connId = 'invalid'
+          attemptAnswer(clonedPayload)
+            .then(()=> { throw new Error('Succeeded with invalid @connId property') })
+            .catch(done)
+          pass(done)
+        })
+      })
+
+      /*
+      ===================================================================================
+        3a. Pairing -> Answer Creation -> AnswerSignal [Receiver → Server] -> SUCCESS
+      ===================================================================================
+      */
+      describe('<SUCCESS>', () => {
+        it('Should transmit an answer to the received offer for retransmission to the initiator', async done => {
+          
+          const webRTCDetails = await connectReceiverWebRTC()
+
+          // Send WebRTC answer as encrypted string //
+          const encryptedSend = await CryptoUtils.encrypt(
+            JSON.stringify(webRTCDetails),
+            privateKey
+          )
+
+          // Set payload data //
+          let clonedPayload = _.cloneDeep(answerPayload)
+          clonedPayload.data = encryptedSend
+
+          // Emit offer signal for receiver and check properties //
+          try {
+            const answerResponse = await attemptAnswer(clonedPayload)
+            const answerMessage = JSON.parse(answerResponse)
+            const signal = answerMessage.signal
+            const data = answerMessage.data
+            const answer = data.data
+            const decryptedAnswer = await CryptoUtils.decrypt(
+              answer,
+              privateKey
+            )
+            const expectedVersionProperties = ['type', 'sdp']
+
+            initiator.answer = JSON.parse(decryptedAnswer)
+
+            expect(signal).toBe(signals.answer)
+            expect(Object.keys(initiator.answer)).toEqual(
+              expect.arrayContaining(expectedVersionProperties)
+            )
+
+            done()
+          } catch (e) {
+            throw new Error('Failed to send answer')
+          }
+        })
+      })
+    })
+  })
+
+  /*
+  ===================================================================================
+    4. Pairing -> WebRTC Connection
+  ===================================================================================
+  */
+  describe('RTC Connection', () => {
+    /*
+    ===================================================================================
+      4a. Pairing -> RTC Connection -> RTC Connection [Initiator & Receiver]
+    ===================================================================================
+    */
+    describe('RTC Connection [Initiator & Receiver] ', () => {
+      /*
+      ===================================================================================
+        4a. Pairing -> RTC Connection -> RTC Connection [Initiator & Receiver] -> SUCCESS
+      ===================================================================================
+      */
+      describe('<SUCCESS>', () => {
+        it('Should establish RTC connection between the initiator and receiver', async done => {
+          // Ensure Initiator is connected. Must also send signal to connect to receiver //
+          let initiatorPeerConnectPromise = new Promise((resolve, reject) => {
+            initiator.peer.signal(initiator.answer)
+            initiator.peer.on(rtcSignals.connect, data => {
+              resolve()
+            })
+            initiator.peer.on(rtcSignals.error, err => {
+              reject(err)
+            })
+          })
+
+          // Ensure Receiver is connected //
+          let receiverPeerConnectPromise = new Promise((resolve, reject) => {
+            receiver.peer.on(rtcSignals.connect, data => {
+              resolve()
+            })
+            receiver.peer.on(rtcSignals.error, err => {
+              reject(err)
+            })
+          })
+
+          // Await promises from both receiver and initiator //
+          await Promise.all([
+            receiverPeerConnectPromise,
+            initiatorPeerConnectPromise
+          ])
+
+          // Success //
+          done()
+        })
+      })
+    })
+
+    /*
+    ===================================================================================
+      4b. Pairing -> RTC Connection -> RtcConnected [Initiator → Server]
+    ===================================================================================
+    */
+    describe('RtcConnected [Initiator → Server]', () => {
+      /*
+      ===================================================================================
+        4b. Pairing -> RTC Connection -> RtcConnected [Initiator → Server] -> SUCCESS
+      ===================================================================================
+      */
+      describe('<SUCCESS>', () => {
+        it('Should inform SignalServer of successful RTC connection', async done => {
+          const message = JSON.stringify({
+            action: 'rtcconnected',
+            data: { connId: connId }
+          })
+          await initiator.socket.send(message)
+          setListener(initiator, async msg => {
+            const parsedMsg = JSON.parse(msg)
+            const signal = parsedMsg.signal
+            expect(signal).toBe(signals.disconnect)
+            done()
+          })
+        })
+      })
+    })
+
+    /*
+    ===================================================================================
+      4c. Pairing -> RTC Connection -> RtcConnected [Receiver → Server]
+    ===================================================================================
+    */
+    describe('RtcConnected [Initiator → Server]', () => {
+      /*
+      ===================================================================================
+        4c. Pairing -> RTC Connection -> RtcConnected [Receiver → Server] -> SUCCESS
+      ===================================================================================
+      */
+      describe('<SUCCESS>', () => {
+        it('Should inform SignalServer of successful RTC connection', async done => {
+          const message = JSON.stringify({
+            action: 'rtcconnected',
+            data: { connId: connId }
+          })
+          await receiver.socket.send(message)
+          setListener(receiver, async msg => {
+            const parsedMsg = JSON.parse(msg)
+            const signal = parsedMsg.signal
+            expect(signal).toBe(signals.disconnect)
+            done()
           })
         })
       })

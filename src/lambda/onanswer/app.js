@@ -4,6 +4,7 @@ import dynamoDocumentClient from '@util/aws/functions/dynamodb-document-client'
 import postMessage from '@util/aws/functions/post-message'
 import query from '@util/aws/functions/query'
 import { signals, roles } from '@util/signals'
+import { validateSignal } from '@util/validation'
 
 /**
  * Upon receiving signals.answerSignal from the receiver, relay the message payload
@@ -16,7 +17,17 @@ import { signals, roles } from '@util/signals'
 const handler = async (event, context) => {
   const connectionId = event.requestContext.connectionId
   const endpoint = event.requestContext.domainName + '/' + event.requestContext.stage
-  const data = JSON.parse(event.body).data
+  const body = JSON.parse(event.body)
+  const data = body.data
+
+  try {
+    await validateSignal({
+      signal: event.requestContext.routeKey,
+      data: data
+    })
+  } catch (e) {
+    return { statusCode: 500, body: 'Invalid signal params' }
+  }
 
   const entry = await query.byConnectionId(connectionId)
   const pair = await query.byConnId(entry.connId)
