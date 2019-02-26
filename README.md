@@ -1,6 +1,7 @@
-# (Updated) Simple Websockets Chat App
+# MewConnect Pairing Server
 
-This is an updated version of the [AWS Simple Websockets Chat App](https://github.com/aws-samples/simple-websockets-chat-app). The functionality remains the same, however, running and deploying the process has been dockerized and made much simpler.
+The MewConnect Pairing Server attempts to pair two "signaling" peers together via a secure AWS Lambda Websocket connection.
+These peers will then establish a webRTC connection to each other, allowing secure communication using the credentials created during the pairing process.
 
 # Setup
 
@@ -11,7 +12,7 @@ It is a required that you have [node.js](https://nodejs.org/en/), [Docker](https
 Before installing, it is required that you create a .env file with the following variables obtained via your AWS account:
 
 ```
-AWSCLI_VERSION=1.16.71
+AWSCLI_VERSION=1.16.112
 AWS_DEFAULT_REGION=us-west-1
 AWS_ACCESS_KEY_ID=###################
 AWS_SECRET_ACCESS_KEY=################################
@@ -32,3 +33,8 @@ npm install
 npm run deploy
 ```
 
+## Test
+
+```
+npm run test
+```

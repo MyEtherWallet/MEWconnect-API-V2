@@ -13,15 +13,42 @@ import CryptoUtils from '@utils/crypto-utils'
 import { signals, rtcSignals, roles } from '@signals'
 
 /*
+|--------------------------------------------------------------------------
+|
+| MewConnect Pairing Integration Tests
+|
+|--------------------------------------------------------------------------
+|
+| The goal of these integration tests are to ensure the functionality of the MewConnect Pairing Server.
+| The Pairing Server attempts to pair two "signaling" peers together via a secure socket connection,
+| via AWS Lambda Websockets.
+| These peers will then establish a webRTC connection to each other, allowing
+| secure communication using the credentials created during the pairing process.
+|
+| The tests attempt to mirror the process defined in the following documentation outline:
+| https://docs.google.com/document/d/19acrYB3iLT4j9JDg0xGcccLXFenqfSlNiKVpXOdLL6Y
+|
+| There are (4) primary processes that must be tested:
+|
+| 1. Initial Websocket Connection
+| 2. WebRTC Offer Creation
+| 3. WebRtc Answer Creation
+| 4. WebRTC Connection
+|
+*/
+
+/*
 ===================================================================================
   Test "Member Variables"
 ===================================================================================
 */
 
 // WebSocket URL Address //
+// TODO: .env config //
 const websocketURL = 'wss://22jmo882mb.execute-api.us-west-1.amazonaws.com/dev?'
 
 // WebRTC Variables //
+// TODO: .env config //
 const stunServers = [{ urls: 'stun:global.stun.twilio.com:3478?transport=udp' }]
 const defaultWebRTCOptions = {
   trickle: false,
@@ -96,7 +123,7 @@ const removeListener = async (role) => {
   try {
     role.socket.removeListener('message', role.listener)
   } catch (e) {
-    // No listener
+    // No listener, no worries
   }
 }
 
@@ -130,6 +157,9 @@ describe('Pairing', () => {
     done()
   })
 
+  /**
+   * After each test, remove any listener that may have been attached during that discrete test
+   */
   afterEach(async done => {
     removeListener(initiator)
     removeListener(receiver)
@@ -714,6 +744,115 @@ describe('Pairing', () => {
           } catch (e) {
             throw new Error('Failed to send answer')
           }
+        })
+      })
+    })
+  })
+
+  /*
+  ===================================================================================
+    4. Pairing -> WebRTC Connection
+  ===================================================================================
+  */
+  describe('RTC Connection', () => {
+    /*
+    ===================================================================================
+      4a. Pairing -> RTC Connection -> RTC Connection [Initiator & Receiver]
+    ===================================================================================
+    */
+    describe('RTC Connection [Initiator & Receiver] ', () => {
+      /*
+      ===================================================================================
+        4a. Pairing -> RTC Connection -> RTC Connection [Initiator & Receiver] -> SUCCESS
+      ===================================================================================
+      */
+      describe('<SUCCESS>', () => {
+        it('Should establish RTC connection between the initiator and receiver', async done => {
+          // Ensure Initiator is connected. Must also send signal to connect to receiver //
+          let initiatorPeerConnectPromise = new Promise((resolve, reject) => {
+            initiator.peer.signal(initiator.answer)
+            initiator.peer.on(rtcSignals.connect, data => {
+              resolve()
+            })
+            initiator.peer.on(rtcSignals.error, err => {
+              reject(err)
+            })
+          })
+
+          // Ensure Receiver is connected //
+          let receiverPeerConnectPromise = new Promise((resolve, reject) => {
+            receiver.peer.on(rtcSignals.connect, data => {
+              resolve()
+            })
+            receiver.peer.on(rtcSignals.error, err => {
+              reject(err)
+            })
+          })
+
+          // Await promises from both receiver and initiator //
+          await Promise.all([
+            receiverPeerConnectPromise,
+            initiatorPeerConnectPromise
+          ])
+
+          // Success //
+          done()
+        })
+      })
+    })
+
+    /*
+    ===================================================================================
+      4b. Pairing -> RTC Connection -> RtcConnected [Initiator → Server]
+    ===================================================================================
+    */
+    describe('RtcConnected [Initiator → Server]', () => {
+      /*
+      ===================================================================================
+        4b. Pairing -> RTC Connection -> RtcConnected [Initiator → Server] -> SUCCESS
+      ===================================================================================
+      */
+      describe('<SUCCESS>', () => {
+        it('Should inform SignalServer of successful RTC connection', async done => {
+          const message = JSON.stringify({
+            action: 'rtcconnected',
+            data: { connId: connId }
+          })
+          await initiator.socket.send(message)
+          setListener(initiator, async msg => {
+            const parsedMsg = JSON.parse(msg)
+            const signal = parsedMsg.signal
+            expect(signal).toBe(signals.disconnect)
+            done()
+          })
+        })
+      })
+    })
+
+    /*
+    ===================================================================================
+      4c. Pairing -> RTC Connection -> RtcConnected [Receiver → Server]
+    ===================================================================================
+    */
+    describe('RtcConnected [Initiator → Server]', () => {
+      /*
+      ===================================================================================
+        4c. Pairing -> RTC Connection -> RtcConnected [Receiver → Server] -> SUCCESS
+      ===================================================================================
+      */
+      describe('<SUCCESS>', () => {
+        it('Should inform SignalServer of successful RTC connection', async done => {
+          const message = JSON.stringify({
+            action: 'rtcconnected',
+            data: { connId: connId }
+          })
+          await receiver.socket.send(message)
+          setListener(receiver, async msg => {
+            const parsedMsg = JSON.parse(msg)
+            const signal = parsedMsg.signal
+            expect(signal).toBe(signals.disconnect)
+            done()
+          })
         })
       })
     })
