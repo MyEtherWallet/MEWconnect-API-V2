@@ -27,14 +27,14 @@ S3_BUCKET=simple-chat-bucket-name
 npm install
 ```
 
-# Deploying to AWS
-
-```
-npm run deploy
-```
-
 ## Test
 
 ```
 npm run test
+```
+
+# Deploying to AWS
+
+```
+npm run deploy
 ```
