@@ -37,7 +37,7 @@ const handler = async (event, context) => {
 
   const postData = {
   	signal: signals.offer,
-  	data: data.data,
+  	data: data,
   	message: 'Initiator sent WebRTC Offer. Please respond.'
   }
 
