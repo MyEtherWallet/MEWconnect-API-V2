@@ -20,28 +20,37 @@ export default class Initiator {
     this.privateKey
     this.signed
     this.connId
+
+    this.webRTCAnswer
   }
 
   /*
   ===================================================================================
-    Setters
+    Keys
   ===================================================================================
   */
  
-  set publicKey (val) {
-    this.publicKey = val
+  generateKeys () {
+    const keys = CryptoUtils.generateKeys()
+    this.publicKey = keys.publicKey
+    this.privateKey = keys.privateKey
+    this.connId = CryptoUtils.generateConnId(this.publicKey)
+    this.signed = CryptoUtils.signMessage(this.privateKey, this.privateKey)
   }
 
-  set privateKey (val) {
-    this.privateKey = val
+  /*
+  ===================================================================================
+    Encryption
+  ===================================================================================
+  */
+  
+  async encrypt (message) {
+    message = typeof message === 'String' ? message : JSON.stringify(message)
+    return await CryptoUtils.encrypt(message, this.privateKey)
   }
-
-  set signed (val) {
-    this.signed = val
-  }
-
-  set connId (val) {
-    this.connId = val
+ 
+  async decrypt (message) {
+    return await CryptoUtils.decrypt(message, this.privateKey)
   }
 
   /*
@@ -50,13 +59,13 @@ export default class Initiator {
   ===================================================================================
   */
 
-  async connect (websocketURL, connId, signed) {
+  async connect (websocketURL) {
     await this.socket.connect(
       websocketURL, 
       {
         role: roles.initiator,
-        connId: connId,
-        signed: signed
+        connId: this.connId,
+        signed: this.signed
       }
     )
   }
@@ -81,6 +90,14 @@ export default class Initiator {
  
   async offer () {
     return await this.peer.offer()
+  }
+
+  async signal (answer) {
+    return await this.peer.connect(answer)
+  }
+
+  onRTC (signal, fn) {
+    this.peer.on(signal, fn)
   }
   
 }

@@ -12,6 +12,7 @@ export default class WebRTCConnection {
   constructor (options = {}) {
     this.options = options
     this.peer = {}
+    this.listeners = {}
   }
 
   async offer () {
@@ -36,6 +37,14 @@ export default class WebRTCConnection {
         resolve(data)
       })
     })
+  }
+
+  connect (answer) {
+    this.peer.signal(answer)
+  }
+
+  on (signal, fn) {
+    this.peer.on(signal, fn)
   }
   
 }

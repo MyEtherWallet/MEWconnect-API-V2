@@ -13,6 +13,8 @@ import { signals, rtcSignals, roles } from '@signals'
 export default class Receiver {
 
   constructor (options = {}) {
+    this.options = options
+
     this.socket = new WebsocketConnection()
     this.peer = new WebRTCConnection()
 
@@ -20,28 +22,36 @@ export default class Receiver {
     this.privateKey
     this.signed
     this.connId
+
+    this.webRTCAnswer
   }
 
   /*
   ===================================================================================
-    Setters
+    Keys
   ===================================================================================
   */
  
-  set publicKey (val) {
-    this.publicKey = val
+  async setKeys (publicKey, privateKey, connId) {
+    this.publicKey = publicKey
+    this.privateKey = privateKey
+    this.connId = connId
+    this.signed = CryptoUtils.signMessage(this.privateKey, this.privateKey)
   }
 
-  set privateKey (val) {
-    this.privateKey = val
+  /*
+  ===================================================================================
+    Encryption
+  ===================================================================================
+  */
+  
+  async encrypt (message) {
+    message = typeof message === 'String' ? message : JSON.stringify(message)
+    return await CryptoUtils.encrypt(message, this.privateKey)
   }
-
-  set signed (val) {
-    this.signed = val
-  }
-
-  set connId (val) {
-    this.connId = val
+ 
+  async decrypt (message) {
+    return await CryptoUtils.decrypt(message, this.privateKey)
   }
 
   /*
@@ -50,13 +60,13 @@ export default class Receiver {
   ===================================================================================
   */
 
-  async connect (websocketURL, connId, signed) {
+  async connect (websocketURL) {
     await this.socket.connect(
       websocketURL, 
       {
         role: roles.receiver,
-        connId: connId,
-        signed: signed
+        connId: this.connId,
+        signed: this.signed
       }
     )
   }
@@ -81,6 +91,10 @@ export default class Receiver {
  
   async answer (offer) {
     return await this.peer.answer(offer)
+  }
+
+  onRTC (signal, fn) {
+    this.peer.on(signal, fn)
   }
   
 }
