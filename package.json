@@ -59,6 +59,8 @@
     "testEnvironment": "node",
     "moduleNameMapper": {
       "@signals(.*)$": "<rootDir>/dist/util/signals$1",
+      "@clients(.*)$": "<rootDir>/test/clients$1",
+      "@config(.*)$": "<rootDir>/test/config$1",
       "@utils(.*)$": "<rootDir>/test/utils$1",
       "@/(.*)$": "<rootDir>dist$1"
     }

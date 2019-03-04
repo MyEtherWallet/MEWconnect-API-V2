@@ -125,7 +125,7 @@ const encryptedValidator = new Schema(
     },
     connId: {
       type: String,
-      required: true,
+      required: false,
       length: { min: 32, max: 32 }
     }
   },
