@@ -1,6 +1,5 @@
 'use strict'
 
-// Imports //
 import queryString from 'query-string'
 import webSocketClient from 'promise-ws'
 
