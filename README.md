@@ -17,8 +17,8 @@ AWS_DEFAULT_REGION=us-west-1
 AWS_ACCESS_KEY_ID=###################
 AWS_SECRET_ACCESS_KEY=################################
 AWS_REGION=us-west-1
-TABLE_NAME=simple-chat-table-name
-S3_BUCKET=simple-chat-bucket-name
+TABLE_NAME=signal-server-table
+S3_BUCKET=signal-server-bucket
 ```
 
 ## Install
@@ -28,6 +28,13 @@ npm install
 ```
 
 ## Test
+
+Testing requires a proper `.env.test` file to be in the root directory.
+
+```
+WEBSOCKET_URL=wss://**********.execute-api.us-west-1.amazonaws.com/dev
+STUN_SERVER=stun:global.stun.twilio.com:3478?transport=udp
+```
 
 ```
 npm run test

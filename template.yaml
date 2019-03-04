@@ -1,15 +1,17 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  simple-websockets-chat-app
+  MEWConnect Handshake Server
 
-  SAM Template for simple-websockets-chat-app that has the DynamoDB table and Lambda
-  functions needed to demonstrate the Websocket protocol on API Gateway.
+  SAM Template for the MEWConnect Handshake Server.
+  DynamoDB
+  S3
+  APIGateway
 
 Parameters:
   TableName:
     Type: String
-    Default: 'simplechat_connections'
+    Default: 'mewconnect_handshake_connections'
     Description: (Required) The name of the new DynamoDB to store connection identifiers for each connected clients. Minimum 3 characters
     MinLength: 3
     MaxLength: 50

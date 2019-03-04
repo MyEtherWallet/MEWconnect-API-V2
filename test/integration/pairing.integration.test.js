@@ -6,6 +6,37 @@ import Receiver from '@clients/receiver'
 import { signals, rtcSignals, roles } from '@signals'
 import { stunServers, version, websocketURL, webRTCOptions } from '@config'
 
+/*
+|--------------------------------------------------------------------------
+|
+| MewConnect Pairing Integration Tests
+|
+|--------------------------------------------------------------------------
+|
+| The goal of these integration tests are to ensure the functionality of the MewConnect Pairing Server.
+| The Pairing Server attempts to pair two "signaling" peers together via a secure socket connection,
+| via AWS Lambda Websockets.
+| These peers will then establish a webRTC connection to each other, allowing
+| secure communication using the credentials created during the pairing process.
+|
+| The tests attempt to mirror the process defined in the following documentation outline:
+| https://docs.google.com/document/d/19acrYB3iLT4j9JDg0xGcccLXFenqfSlNiKVpXOdLL6Y
+|
+| There are (4) primary processes that must be tested:
+|
+| 1. Initial Websocket Connection
+| 2. WebRTC Offer Creation
+| 3. WebRtc Answer Creation
+| 4. WebRTC Connection
+|
+*/
+
+/*
+===================================================================================
+  Test "Member Variables"
+===================================================================================
+*/
+
 // Clients //
 let initiator
 let receiver
@@ -297,9 +328,9 @@ describe('Pairing', () => {
           initiator.send(signals.offerSignal, message)
           receiver.on(signals.offer, async data => {
             webRTCOffer = await receiver.decrypt(data.data)
-            const expectedVersionProperties = ['type', 'sdp']
+            const expectedProperties = ['type', 'sdp']
             expect(Object.keys(webRTCOffer)).toEqual(
-              expect.arrayContaining(expectedVersionProperties)
+              expect.arrayContaining(expectedProperties)
             )
             done()
           })
@@ -357,9 +388,9 @@ describe('Pairing', () => {
           receiver.send(signals.answerSignal, message)
           initiator.on(signals.answer, async data => {
             webRTCAnswer = await initiator.decrypt(data.data)
-            const expectedVersionProperties = ['type', 'sdp']
+            const expectedProperties = ['type', 'sdp']
             expect(Object.keys(webRTCAnswer)).toEqual(
-              expect.arrayContaining(expectedVersionProperties)
+              expect.arrayContaining(expectedProperties)
             )
             done()
           })

@@ -1,7 +1,7 @@
 'use strict'
 
 import Peer from 'simple-peer'
-import { stunServers, webRTCOptions } from '@config'
+import { stunServers, turnServers, webRTCOptions, webRTCOptionsTURN } from '@config'
 import { rtcSignals } from '@signals'
 
 export default class WebRTCConnection {
