@@ -38,3 +38,62 @@ npm run test
 ```
 npm run deploy
 ```
+
+# Interaction
+
+Interaction with the v2 API is largely the same as v1, however there are some immediate differences:
+
+## Sending Messages
+
+Messages must be stringified JSON objects in the following format:
+
+```
+{
+  action: signal, // E.G signals.offerSignal => 'offersignal'
+  data: message
+}
+```
+
+Please note that signals must now be lowercase.
+What was previously "offerSignal" must now be "offersignal".
+
+## Receiving Messages
+
+The WebSocket client should listen for an on "message" event.
+The message that is received will be a stringified JSON object.
+
+```
+{
+  WebsocketClient.on('message', message => {
+    // Handle message payload
+  })
+}
+```
+
+The "signals" will be relayed in the message payload:
+
+```
+{
+  signal: signal, // E.G. signals.confirmation => 'confirmation'
+  data: data, // Actual data/message layload
+  message: message // Server response explanation. E.G. 'Initiator sent WebRTC Offer. Please respond.'
+}
+```
+
+### Flow
+
+### Initial Connection
+
+When initially connecting, proper query params must be appended to the URL.
+The process to connect to the same connId is much quicker, and only involves one step:
+
+```
+role = 'initiator' or 'receiver'
+connId
+signed
+```
+
+```
+Initiator.connect('wss://22jmo882mb.execute-api.us-west-1.amazonaws.com/dev?role=initiator&connId=<connId>&signed=<signed>')
+Receiver.connect('wss://22jmo882mb.execute-api.us-west-1.amazonaws.com/dev?role=receiver&connId=<connId>&signed=<signed>')
+```

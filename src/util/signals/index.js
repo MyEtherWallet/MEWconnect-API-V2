@@ -12,7 +12,7 @@ const signals = {
   answerSignal: 'answersignal',
   answer: 'answer',
   initiated: 'initiated',
-  rtcConnected: 'rtcConnected',
+  rtcConnected: 'rtcconnected',
   disconnect: 'disconnect',
   handshake: 'handshake',
   confirmation: 'confirmation',

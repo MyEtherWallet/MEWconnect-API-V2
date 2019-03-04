@@ -1,9 +1,5 @@
 'use strict'
 
-// Imports //
-
-
-// Lib //
 import CryptoUtils from '@utils/crypto-utils'
 import WebsocketConnection from '@utils/websocket-connection'
 import WebRTCConnection from '@utils/webrtc-connection'
@@ -50,7 +46,8 @@ export default class Initiator {
   }
  
   async decrypt (message) {
-    return await CryptoUtils.decrypt(message, this.privateKey)
+    const decryptedMessageString = await CryptoUtils.decrypt(message, this.privateKey)
+    return JSON.parse(decryptedMessageString)
   }
 
   /*
@@ -59,15 +56,13 @@ export default class Initiator {
   ===================================================================================
   */
 
-  async connect (websocketURL) {
-    await this.socket.connect(
-      websocketURL, 
-      {
-        role: roles.initiator,
-        connId: this.connId,
-        signed: this.signed
-      }
-    )
+  async connect (websocketURL, options = null) {
+    const queryOptions = options ? options : {
+      role: roles.initiator,
+      connId: this.connId,
+      signed: this.signed
+    }
+    await this.socket.connect(websocketURL, queryOptions)
   }
 
   on (signal, fn) {
@@ -89,7 +84,8 @@ export default class Initiator {
   */
  
   async offer () {
-    return await this.peer.offer()
+    const offer = await this.peer.offer()
+    return await this.encrypt(offer)
   }
 
   async signal (answer) {
