@@ -70,6 +70,7 @@
     }
   },
   "dependencies": {
+    "twilio": "^3.29.0",
     "validate": "^4.5.1"
   }
 }

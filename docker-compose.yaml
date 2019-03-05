@@ -69,7 +69,7 @@ services:
   # Deploy packaged project via AWS SAM CLI
   aws-sam-deploy:
     image: aws-sam
-    command: deploy --template-file packaged.yaml --stack-name mewconnect-handshake-server --capabilities CAPABILITY_IAM
+    command: deploy --template-file packaged.yaml --stack-name mewconnect-handshake-server --capabilities CAPABILITY_IAM --parameter-overrides TwilioID=${TWILIO_ID} TwilioToken=${TWILIO_TOKEN} TwilioTTL=${TWILIO_TTL}
     env_file: .env
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock

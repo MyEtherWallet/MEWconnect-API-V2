@@ -4,7 +4,7 @@
 import Initiator from '@clients/initiator'
 import Receiver from '@clients/receiver'
 import { signals, rtcSignals, roles } from '@signals'
-import { stunServers, version, websocketURL, webRTCOptions } from '@config'
+import { stunServers, websocketURL } from '@config'
 
 /*
 |--------------------------------------------------------------------------
@@ -44,6 +44,9 @@ let receiver
 // WebRTC Offer/Answer //
 let webRTCOffer
 let webRTCAnswer
+
+// ICE Servers //
+let iceServers
 
 /*
 ===================================================================================
@@ -429,49 +432,112 @@ describe('Pairing', () => {
             initiatorPromise,
             receiverPromise
           ])
+
+          initiator.disconnectRTC()
+          receiver.disconnectRTC()
+
           done()
         })
       })
-    })
-    /*
-    ===================================================================================
-      4b. Pairing -> RTC Connection -> RtcConnected [Initiator → Server]
-    ===================================================================================
-    */
-    describe('RtcConnected [Initiator & Receiver → Server]', () => {
       /*
       ===================================================================================
-        4b. Pairing -> RTC Connection -> RtcConnected [Initiator → Server] -> SUCCESS
+        4b. Pairing -> RTC Connection (TURN) -> RTC Connection [Initiator & Receiver]
       ===================================================================================
       */
-      describe('<SUCCESS>', () => {
-        it('Should inform SignalServer of successful RTC connection', async done => {
-          initiator.send(signals.rtcConnected)
-          initiator.on(signals.disconnect, data => {
+      describe('RTC Connection (TURN) [Initiator & Receiver] ', () => {
+        /*
+        ===================================================================================
+          4b. Pairing -> RTC Connection (TURN) -> RTC Connection [Initiator & Receiver] -> SUCCESS
+        ===================================================================================
+        */
+        describe('<SUCCESS>', () => {
+          it('Should receive ICE servers from the SignalServer', async done => {
+            initiator.send(signals.tryTurn)
+            const initiatorPromise = new Promise((resolve, reject) => {
+              initiator.on(signals.turnToken, data => {
+                const expectedProperties = ['iceServers']
+                expect(Object.keys(data)).toEqual(
+                  expect.arrayContaining(expectedProperties)
+                )
+                iceServers = data.iceServers
+                resolve()
+              })              
+            })
+            const receiverPromise = new Promise((resolve, reject) => {
+              receiver.on(signals.attemptingTurn, resolve)
+            })        
+            await Promise.all([
+              initiatorPromise,
+              receiverPromise
+            ])
+
+            done()
+          })
+          it('Should connect peers via received ICE servers', async done => {
+            const offer = await initiator.offer(iceServers)
+            const decryptedOffer = await receiver.decrypt(offer)
+            const answer = await receiver.answer(decryptedOffer)
+            const decryptedAnswer = await initiator.decrypt(answer)
+
+            initiator.signal(decryptedAnswer)
+            const initiatorPromise = new Promise((resolve, reject) => {
+              initiator.onRTC(rtcSignals.connect, resolve)
+            })
+            const receiverPromise = new Promise((resolve, reject) => {
+              receiver.onRTC(rtcSignals.connect, resolve)
+            })
+            await Promise.all([
+              initiatorPromise,
+              receiverPromise
+            ])
+
             done()
           })
         })
       })
-    })
-    /*
-    ===================================================================================
-      4b. Pairing -> RTC Connection -> RtcConnected [Receiver → Server]
-    ===================================================================================
-    */
-    describe('RtcConnected [Receiver & Receiver → Server]', () => {
       /*
       ===================================================================================
-        4b. Pairing -> RTC Connection -> RtcConnected [Receiver → Server] -> SUCCESS
+        4c. Pairing -> RTC Connection -> RtcConnected [Initiator → Server]
       ===================================================================================
       */
-      describe('<SUCCESS>', () => {
-        it('Should inform SignalServer of successful RTC connection', async done => {
-          receiver.send(signals.rtcConnected)
-          receiver.on(signals.disconnect, data => {
-            done()
+      describe('RtcConnected [Initiator & Receiver → Server]', () => {
+        /*
+        ===================================================================================
+          4c. Pairing -> RTC Connection -> RtcConnected [Initiator → Server] -> SUCCESS
+        ===================================================================================
+        */
+        describe('<SUCCESS>', () => {
+          it('Should inform SignalServer of successful RTC connection', async done => {
+            initiator.send(signals.rtcConnected)
+            initiator.on(signals.disconnect, data => {
+              done()
+            })
           })
         })
       })
-    })
+      /*
+      ===================================================================================
+        4c. Pairing -> RTC Connection -> RtcConnected [Receiver → Server]
+      ===================================================================================
+      */
+      describe('RtcConnected [Receiver & Receiver → Server]', () => {
+        /*
+        ===================================================================================
+          4c. Pairing -> RTC Connection -> RtcConnected [Receiver → Server] -> SUCCESS
+        ===================================================================================
+        */
+        describe('<SUCCESS>', () => {
+          it('Should inform SignalServer of successful RTC connection', async done => {
+            receiver.send(signals.rtcConnected)
+            receiver.on(signals.disconnect, data => {
+              done()
+            })
+          })
+        })
+      })
+    })   
   })
 })
+
+
+    
