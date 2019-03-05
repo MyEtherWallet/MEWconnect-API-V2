@@ -6,6 +6,17 @@ import postMessage from '@util/aws/functions/post-message'
 import query from '@util/aws/functions/query'
 import { signals, roles } from '@util/signals'
 
+
+/**
+ * Upon receiving signals.tryTurn from the initiator, get TURN servers
+ * and credentials from Twilio. Send the response to the initiator
+ * via the signals.turnToken signal, and signal to the receiver that
+ * the initiator is attempting to connect via TURN servers by 
+ * the signals.attemptingTurn signal.
+ * 
+ * @param  {Object} event - Original connection event payload from AWS
+ * @param  {String} event.body - Payload object string to parse
+ */
 const handler = async (event, context) => {
   const connectionId = event.requestContext.connectionId
   const endpoint = event.requestContext.domainName + '/' + event.requestContext.stage
