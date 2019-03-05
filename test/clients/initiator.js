@@ -3,7 +3,7 @@
 import CryptoUtils from '@utils/crypto-utils'
 import WebsocketConnection from '@utils/websocket-connection'
 import WebRTCConnection from '@utils/webrtc-connection'
-import { stunServers, version, websocketURL, webRTCOptions } from '@config'
+import { stunServers, websocketURL } from '@config'
 import { signals, rtcSignals, roles } from '@signals'
 
 export default class Initiator {
@@ -16,8 +16,6 @@ export default class Initiator {
     this.privateKey
     this.signed
     this.connId
-
-    this.webRTCAnswer
   }
 
   /*
@@ -131,8 +129,8 @@ export default class Initiator {
    *
    * @return {Object} - Encrypted WebRTC offer
    */
-  async offer () {
-    const offer = await this.peer.offer()
+  async offer (options = null) {
+    const offer = await this.peer.offer(options)
     return await this.encrypt(offer)
   }
 
@@ -143,6 +141,13 @@ export default class Initiator {
    */
   async signal (answer) {
     return await this.peer.connect(answer)
+  }
+
+  /**
+   * Disconnect from current WebRTC connection
+   */
+  async disconnectRTC () {
+    this.peer = new WebRTCConnection()
   }
 
   /**

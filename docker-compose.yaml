@@ -69,7 +69,7 @@ services:
   # Deploy packaged project via AWS SAM CLI
   aws-sam-deploy:
     image: aws-sam
-    command: deploy --template-file packaged.yaml --stack-name simple-websocket-chat-app --capabilities CAPABILITY_IAM --parameter-overrides MyParameterSample=MySampleValue
+    command: deploy --template-file packaged.yaml --stack-name mewconnect-handshake-server --capabilities CAPABILITY_IAM --parameter-overrides TwilioID=${TWILIO_ID} TwilioToken=${TWILIO_TOKEN} TwilioTTL=${TWILIO_TTL}
     env_file: .env
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
@@ -78,7 +78,7 @@ services:
   # Get cloudformation via AWS CLI
   aws-cli-cloudformation:
     image: aws-cli
-    command: cloudformation describe-stacks --stack-name simple-websocket-chat-app --query 'Stacks[].Outputs'
+    command: cloudformation describe-stacks --stack-name mewconnect-handshake-server --query 'Stacks[].Outputs'
     env_file: .env
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock

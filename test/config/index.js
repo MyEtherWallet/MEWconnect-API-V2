@@ -2,9 +2,8 @@
 
 import wrtc from 'wrtc'
 
-const stunServers = [{ urls: 'stun:global.stun.twilio.com:3478?transport=udp' }]
-const version = '0.0.1'
-const websocketURL = 'wss://22jmo882mb.execute-api.us-west-1.amazonaws.com/dev'
+const stunServers = [{ urls: process.env.STUN_SERVER }]
+const websocketURL = process.env.WEBSOCKET_URL
 const webRTCOptions = {
   trickle: false,
   iceTransportPolicy: 'relay',
@@ -14,4 +13,4 @@ const webRTCOptions = {
   wrtc: wrtc
 }
 
-export { stunServers, version, websocketURL, webRTCOptions }
+export { stunServers, websocketURL, webRTCOptions }

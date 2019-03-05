@@ -1,4 +1,4 @@
 packaged.yaml
 /node_modules/
-.env
+.env*
 dist/

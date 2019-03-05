@@ -155,7 +155,7 @@ const validateSignal = async message => {
     } else if (signal === rtcConnected) {
       errors = rtcConnectedValidator.validate(data)
     } else if (signal === tryTurn) {
-      errors = tryTurnValidator.validate(data)
+      // errors = tryTurnValidator.validate(data)
     } else {
       reject(errors)
     }

@@ -1,9 +1,9 @@
 'use strict'
 
 const signals = {
-  attemptingTurn: 'attemptingTurn',
-  turnToken: 'turnToken',
-  tryTurn: 'tryTurn',
+  attemptingTurn: 'attemptingturn',
+  turnToken: 'turntoken',
+  tryTurn: 'tryturn',
   connect: 'connect',
   connection: 'connection',
   signature: 'signature',
@@ -32,6 +32,7 @@ const roles = {
 const rtcSignals = {
   error: 'error',
   connect: 'connect',
+  disconnected: 'disconnected',
   close: 'close',
   data: 'data',
   signal: 'signal'

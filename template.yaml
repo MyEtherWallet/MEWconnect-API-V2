@@ -1,20 +1,31 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  simple-websockets-chat-app
+  MEWConnect Handshake Server
 
-  SAM Template for simple-websockets-chat-app that has the DynamoDB table and Lambda
-  functions needed to demonstrate the Websocket protocol on API Gateway.
+  SAM Template for the MEWConnect Handshake Server.
+  DynamoDB
+  S3
+  APIGateway
 
 Parameters:
   TableName:
     Type: String
-    Default: 'simplechat_connections'
+    Default: 'mewconnect_handshake_connections'
     Description: (Required) The name of the new DynamoDB to store connection identifiers for each connected clients. Minimum 3 characters
     MinLength: 3
     MaxLength: 50
     AllowedPattern: ^[A-Za-z_]+$
     ConstraintDescription: 'Required. Can be characters and underscore only. No numbers or special characters allowed.'
+  TwilioID:
+    Type: String
+    Default: 'Please update .env.aws file'
+  TwilioToken:
+    Type: String
+    Default: 'Please update .env.aws file'
+  TwilioTTL:
+    Type: Number
+    Default: 3600
 
 Resources:
   ConnectionsTable:
@@ -121,6 +132,39 @@ Resources:
       - DynamoDBCrudPolicy:
           TableName: !Ref ConnectionsTable
 
+  OnTryTurnFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/lambda/ontryturn/
+      Handler: app.handler
+      MemorySize: 256
+      Runtime: nodejs8.10
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref ConnectionsTable
+          TWILIO_ID: !Ref TwilioID
+          TWILIO_TOKEN: !Ref TwilioToken
+          TWILIO_TTL: !Ref TwilioTTL
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName: !Ref ConnectionsTable
+      - Statement:
+        - Effect: Allow
+          Action:
+          - dynamodb:DescribeStream
+          - dynamodb:GetRecords
+          - dynamodb:GetShardIterator
+          - dynamodb:ListStreams
+          - dynamodb:Query
+          Resource: 
+          - "*"
+      - Statement:
+        - Effect: Allow
+          Action:
+          - 'execute-api:ManageConnections'
+          Resource:
+          - 'arn:aws:execute-api:*:*:*/@connections/*'
+
   OnOfferSignalFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -223,6 +267,10 @@ Outputs:
   OnDbEntryFunctionArn:
     Description: "OnDbEntry function ARN"
     Value: !GetAtt OnDbEntryFunction.Arn
+
+  OnTryTurnFunctionArn:
+    Description: "OnTryTurnfunction ARN"
+    Value: !GetAtt OnTryTurnFunction.Arn
 
   OnOfferSignalFunctionArn:
     Description: "OnOfferSignal function ARN"

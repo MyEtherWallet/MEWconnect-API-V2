@@ -3,7 +3,7 @@
 import CryptoUtils from '@utils/crypto-utils'
 import WebsocketConnection from '@utils/websocket-connection'
 import WebRTCConnection from '@utils/webrtc-connection'
-import { stunServers, version, websocketURL, webRTCOptions } from '@config'
+import { stunServers, websocketURL } from '@config'
 import { signals, rtcSignals, roles } from '@signals'
 
 export default class Receiver {
@@ -18,8 +18,6 @@ export default class Receiver {
     this.privateKey
     this.signed
     this.connId
-
-    this.webRTCAnswer
   }
 
   /*
@@ -142,6 +140,13 @@ export default class Receiver {
   async answer (offer) {
     const answer = await this.peer.answer(offer)
     return await this.encrypt(answer)
+  }
+
+  /**
+   * Disconnect from current WebRTC connection
+   */
+  async disconnectRTC () {
+    this.peer = new WebRTCConnection()
   }
 
   /**
