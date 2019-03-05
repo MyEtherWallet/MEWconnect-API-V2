@@ -33,7 +33,7 @@ TWILIO_TTL=3600
 npm install
 ```
 
-## Test
+# Test
 
 Testing requires a proper `.env.test` file to be in the root directory.
 
