@@ -70,7 +70,6 @@ const pass = async done => {
 ===================================================================================
 */
 describe('Pairing', () => {
-
   beforeAll(async done => {
     // Initiator //
     initiator = new Initiator()
@@ -78,7 +77,11 @@ describe('Pairing', () => {
 
     // Receiver //
     receiver = new Receiver()
-    receiver.setKeys(initiator.publicKey, initiator.privateKey, initiator.connId)
+    receiver.setKeys(
+      initiator.publicKey,
+      initiator.privateKey,
+      initiator.connId
+    )
 
     done()
   })
@@ -95,7 +98,6 @@ describe('Pairing', () => {
     ===================================================================================
     */
     describe('Connect [Initiator → Server]', () => {
-
       /*
       ===================================================================================
         1a. Pairing -> Initial Connection -> Connect [Initiator → Server] -> FAIL
@@ -104,7 +106,10 @@ describe('Pairing', () => {
       describe('<FAIL>', () => {
         it('Should not connect with missing @role property', async done => {
           try {
-            await initiator.connect(websocketURL, { connId: initiator.connId, signed: initiator.signed })
+            await initiator.connect(websocketURL, {
+              connId: initiator.connId,
+              signed: initiator.signed
+            })
             done.fail(new Error('Connected with missing @role property'))
           } catch (e) {
             done()
@@ -112,7 +117,11 @@ describe('Pairing', () => {
         })
         it('Should not connect with invalid @role property', async done => {
           try {
-            await initiator.connect(websocketURL, { role: 'invalid', connId: initiator.connId, signed: initiator.signed })
+            await initiator.connect(websocketURL, {
+              role: 'invalid',
+              connId: initiator.connId,
+              signed: initiator.signed
+            })
             done.fail(new Error('Connected with invalid @role property'))
           } catch (e) {
             done()
@@ -120,7 +129,10 @@ describe('Pairing', () => {
         })
         it('Should not connect with missing @connId property', async done => {
           try {
-            await initiator.connect(websocketURL, { role: roles.initiator, signed: initiator.signed })
+            await initiator.connect(websocketURL, {
+              role: roles.initiator,
+              signed: initiator.signed
+            })
             done.fail(new Error('Connected with invalid @role property'))
           } catch (e) {
             done()
@@ -128,7 +140,11 @@ describe('Pairing', () => {
         })
         it('Should not connect with invalid @connId property', async done => {
           try {
-            await initiator.connect(websocketURL, { role: roles.initiator, connId: 'invalid', signed: initiator.signed })
+            await initiator.connect(websocketURL, {
+              role: roles.initiator,
+              connId: 'invalid',
+              signed: initiator.signed
+            })
             done.fail(new Error('Connected with invalid @connId property'))
           } catch (e) {
             done()
@@ -136,7 +152,10 @@ describe('Pairing', () => {
         })
         it('Should not connect with missing @signed property', async done => {
           try {
-            await initiator.connect(websocketURL, { roles: roles.initiator, connId: initiator.connId })
+            await initiator.connect(websocketURL, {
+              roles: roles.initiator,
+              connId: initiator.connId
+            })
             done.fail(new Error('Connected with missing @signed property'))
           } catch (e) {
             done()
@@ -182,7 +201,6 @@ describe('Pairing', () => {
     ===================================================================================
     */
     describe('Connect [Receiver → Server]', () => {
-
       /*
       ===================================================================================
         1b. Pairing -> Initial Connection -> Connect [Receiver → Server] -> FAIL
@@ -191,7 +209,10 @@ describe('Pairing', () => {
       describe('<FAIL>', () => {
         it('Should not connect with missing @role property', async done => {
           try {
-            await receiver.connect(websocketURL, { connId: receiver.connId, signed: receiver.signed })
+            await receiver.connect(websocketURL, {
+              connId: receiver.connId,
+              signed: receiver.signed
+            })
             done.fail(new Error('Connected with missing @role property'))
           } catch (e) {
             done()
@@ -199,7 +220,11 @@ describe('Pairing', () => {
         })
         it('Should not connect with invalid @role property', async done => {
           try {
-            await receiver.connect(websocketURL, { role: 'invalid', connId: receiver.connId, signed: receiver.signed })
+            await receiver.connect(websocketURL, {
+              role: 'invalid',
+              connId: receiver.connId,
+              signed: receiver.signed
+            })
             done.fail(new Error('Connected with invalid @role property'))
           } catch (e) {
             done()
@@ -207,7 +232,10 @@ describe('Pairing', () => {
         })
         it('Should not connect with missing @connId property', async done => {
           try {
-            await receiver.connect(websocketURL, { role: roles.receiver, signed: receiver.signed })
+            await receiver.connect(websocketURL, {
+              role: roles.receiver,
+              signed: receiver.signed
+            })
             done.fail(new Error('Connected with invalid @role property'))
           } catch (e) {
             done()
@@ -215,7 +243,11 @@ describe('Pairing', () => {
         })
         it('Should not connect with unmatched @connId property', async done => {
           try {
-            await receiver.connect(websocketURL, { role: roles.receiver, connId: receiver.connId.slice(0, -10) + 'abcdeabcde', signed: receiver.signed })
+            await receiver.connect(websocketURL, {
+              role: roles.receiver,
+              connId: receiver.connId.slice(0, -10) + 'abcdeabcde',
+              signed: receiver.signed
+            })
             done.fail(new Error('Connected with invalid @connId property'))
           } catch (e) {
             done()
@@ -223,7 +255,11 @@ describe('Pairing', () => {
         })
         it('Should not connect with invalid @connId property', async done => {
           try {
-            await receiver.connect(websocketURL, { role: roles.receiver, connId: 'invalid', signed: receiver.signed })
+            await receiver.connect(websocketURL, {
+              role: roles.receiver,
+              connId: 'invalid',
+              signed: receiver.signed
+            })
             done.fail(new Error('Connected with invalid @connId property'))
           } catch (e) {
             done()
@@ -231,7 +267,10 @@ describe('Pairing', () => {
         })
         it('Should not connect with missing @signed property', async done => {
           try {
-            await receiver.connect(websocketURL, { roles: roles.receiver, connId: receiver.connId })
+            await receiver.connect(websocketURL, {
+              roles: roles.receiver,
+              connId: receiver.connId
+            })
             done.fail(new Error('Connected with missing @signed property'))
           } catch (e) {
             done()
@@ -239,7 +278,11 @@ describe('Pairing', () => {
         })
         it('Should not connect with unmatched @signed property', async done => {
           try {
-            await receiver.connect(websocketURL, { roles: roles.receiver, connId: receiver.connId, signed: receiver.signed.slice(0, -10) + 'abcdeabcde' })
+            await receiver.connect(websocketURL, {
+              roles: roles.receiver,
+              connId: receiver.connId,
+              signed: receiver.signed.slice(0, -10) + 'abcdeabcde'
+            })
             done.fail(new Error('Connected with missing @signed property'))
           } catch (e) {
             done()
@@ -428,10 +471,7 @@ describe('Pairing', () => {
           const receiverPromise = new Promise((resolve, reject) => {
             receiver.onRTC(rtcSignals.connect, resolve)
           })
-          await Promise.all([
-            initiatorPromise,
-            receiverPromise
-          ])
+          await Promise.all([initiatorPromise, receiverPromise])
 
           initiator.disconnectRTC()
           receiver.disconnectRTC()
@@ -461,15 +501,12 @@ describe('Pairing', () => {
                 )
                 iceServers = data.iceServers
                 resolve()
-              })              
+              })
             })
             const receiverPromise = new Promise((resolve, reject) => {
               receiver.on(signals.attemptingTurn, resolve)
-            })        
-            await Promise.all([
-              initiatorPromise,
-              receiverPromise
-            ])
+            })
+            await Promise.all([initiatorPromise, receiverPromise])
 
             done()
           })
@@ -486,10 +523,7 @@ describe('Pairing', () => {
             const receiverPromise = new Promise((resolve, reject) => {
               receiver.onRTC(rtcSignals.connect, resolve)
             })
-            await Promise.all([
-              initiatorPromise,
-              receiverPromise
-            ])
+            await Promise.all([initiatorPromise, receiverPromise])
 
             done()
           })
@@ -535,9 +569,6 @@ describe('Pairing', () => {
           })
         })
       })
-    })   
+    })
   })
 })
-
-
-    

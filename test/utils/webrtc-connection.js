@@ -6,8 +6,7 @@ import { stunServers, turnServers } from '@config'
 import { rtcSignals } from '@signals'
 
 export default class WebRTCConnection {
-
-  constructor (options = {}) {
+  constructor(options = {}) {
     this.options = options
     this.peer = {}
     this.listeners = {}
@@ -23,20 +22,22 @@ export default class WebRTCConnection {
    *
    * @return {Object} - WebRTC connection offer
    */
-  async offer (iceServers = null) {
+  async offer(iceServers = null) {
     return new Promise((resolve, reject) => {
       const options = {
         initiator: true,
         trickle: false,
         iceTransportPolicy: 'relay',
         config: {
-          iceServers: iceServers 
-          ? iceServers.map(obj => {
-            const newObject = {}
-            delete Object.assign(newObject, obj, {['urls']: obj['url'] })['url']
-            return newObject
-          }) 
-          : stunServers
+          iceServers: iceServers
+            ? iceServers.map(obj => {
+                const newObject = {}
+                delete Object.assign(newObject, obj, { ['urls']: obj['url'] })[
+                  'url'
+                ]
+                return newObject
+              })
+            : stunServers
         },
         wrtc: wrtc
       }
@@ -56,7 +57,7 @@ export default class WebRTCConnection {
    * @param  {Object} offer - WebRTC offer object create with offer()
    * @return {Object} - WebRTC answer object, to be used by the initiator
    */
-  async answer (offer, iceServers = null) {
+  async answer(offer, iceServers = null) {
     return new Promise((resolve, reject) => {
       const options = {
         trickle: false,
@@ -78,14 +79,14 @@ export default class WebRTCConnection {
    * Given a WebRTC answer object, complete WebRTC connection.
    * @param  {Object} answer - WebRTC answer object created by answer()
    */
-  connect (answer) {
+  connect(answer) {
     this.peer.signal(answer)
   }
 
   /**
    * Disconnect from current WebRTC connection
    */
-  disconnect () {
+  disconnect() {
     this.peer.destroy()
   }
 
@@ -94,8 +95,7 @@ export default class WebRTCConnection {
    * @param  {String} signal - WebRTC signal/event. E.g. 'data'
    * @param  {Function} fn - Callback function to perform on signal event
    */
-  on (signal, fn) {
+  on(signal, fn) {
     this.peer.on(signal, fn)
   }
-  
 }

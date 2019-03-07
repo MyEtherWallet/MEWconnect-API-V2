@@ -9,14 +9,15 @@ import { validateSignal } from '@util/validation'
 /**
  * Upon receiving signals.answerSignal from the receiver, relay the message payload
  * to the initiator so that they can establish a P2P WebRTC connection with the receiver.
- * 
+ *
  * @param  {Object} event - Original connection event payload from AWS
  * @param  {String} event.body - Payload object string to parse
  * @param  {Object} event.body.data - The actual payload sent by the receiver
  */
 const handler = async (event, context) => {
   const connectionId = event.requestContext.connectionId
-  const endpoint = event.requestContext.domainName + '/' + event.requestContext.stage
+  const endpoint =
+    event.requestContext.domainName + '/' + event.requestContext.stage
   const body = JSON.parse(event.body)
   const data = body.data
 

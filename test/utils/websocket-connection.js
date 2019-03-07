@@ -4,13 +4,12 @@ import queryString from 'query-string'
 import webSocketClient from 'promise-ws'
 
 export default class WebsocketConnection {
-
-  constructor (options = {}) {
+  constructor(options = {}) {
     this.options = options
     this.socket = {}
     this.listeners = {}
   }
-  
+
   /**
    * Connect to a given @websocketURL with given @options query params.
    * The client will connect and bind every on "message" event to the
@@ -31,7 +30,7 @@ export default class WebsocketConnection {
    *                                  created for the particular paired connection
    * @param  {String} options.signed - Private key signed with the private key created for the connection
    */
-  async connect (websocketUrl, options = {}) {
+  async connect(websocketUrl, options = {}) {
     let url = `${websocketUrl}?${queryString.stringify(options)}`
     this.socket = await webSocketClient.create(url)
     this.socket.on('message', this.onMessage.bind(this))
@@ -53,7 +52,7 @@ export default class WebsocketConnection {
    * @param  {String} message - Stringified JSON payload sent by the server
    * @return {[type]}         [description]
    */
-  onMessage (message) {
+  onMessage(message) {
     const parsedMessage = JSON.parse(message)
     const signal = parsedMessage.signal
     const data = parsedMessage.data
@@ -69,11 +68,11 @@ export default class WebsocketConnection {
    * Bind an function to a particular message signal event.
    * E.G.
    * socket.on('error', err => {})
-   * 
+   *
    * @param  {String} signal - The signal to listen for
    * @param  {Function} fn - Function to perform on message signal
    */
-  on (signal, fn) {
+  on(signal, fn) {
     this.listeners[signal] = fn
   }
 
@@ -82,7 +81,7 @@ export default class WebsocketConnection {
    *
    * @param  {String} signal - The signal to unbind
    */
-  off (signal) {
+  off(signal) {
     delete this.listeners[signal]
   }
 
@@ -92,12 +91,11 @@ export default class WebsocketConnection {
    * @param  {String} signal - Particular action/signal such as "offersignal"
    * @param  {[type]} data - Data payload
    */
-  send (signal, data = {}) {
+  send(signal, data = {}) {
     const message = JSON.stringify({
       action: signal,
       data: data
     })
     this.socket.send(message)
   }
-
 }

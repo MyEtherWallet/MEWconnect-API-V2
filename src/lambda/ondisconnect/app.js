@@ -8,7 +8,7 @@ import { signals, roles } from '@util/signals'
 /**
  * On client disconnect from WebSocket client, delete records with
  * matching Key @connectionId.
- * 
+ *
  * @param  {Object} event - Original connection event payload from AWS
  */
 const handler = async (event, context) => {
@@ -19,10 +19,13 @@ const handler = async (event, context) => {
 
   try {
     await dynamoDocumentClient.delete(deleteParams)
-    return { statusCode: 200, body: `DB Entry ${connectionId} Deleted`}
+    return { statusCode: 200, body: `DB Entry ${connectionId} Deleted` }
   } catch (e) {
-    console.log('Failed to delete db entry: ', e )
-    return { statusCode: 500, body: `Failed to Delete DB Entry ${connectionId}`}
+    console.log('Failed to delete db entry: ', e)
+    return {
+      statusCode: 500,
+      body: `Failed to Delete DB Entry ${connectionId}`
+    }
   }
 }
 
