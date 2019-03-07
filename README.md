@@ -13,7 +13,6 @@ Before installing, it is required that you create a .env file with the following
 
 ```
 # AWS Info and Credentials
-AWSCLI_VERSION=1.16.112
 AWS_DEFAULT_REGION=us-west-1
 AWS_ACCESS_KEY_ID=****************************
 AWS_SECRET_ACCESS_KEY=****************************

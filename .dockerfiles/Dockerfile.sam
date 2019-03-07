@@ -15,7 +15,7 @@ RUN apk add --update \
     py-pip \
     build-base \
     && pip install --upgrade pip \
-    && pip install awscli==$AWSCLI_VERSION --upgrade --user \
+    && pip install awscli --upgrade --user \
     && pip install aws-sam-cli --upgrade --user \
     && apk --purge -v del py-pip \
     && rm -rf /var/cache/apk/*
