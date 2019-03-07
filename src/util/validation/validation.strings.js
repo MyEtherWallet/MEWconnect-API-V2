@@ -15,7 +15,7 @@ const validHex = string => {
 }
 
 const validRole = string => {
-	return (string === roles.initiator || string === roles.receiver)
+  return string === roles.initiator || string === roles.receiver
 }
 
 export { validConnId, validHex, validRole }

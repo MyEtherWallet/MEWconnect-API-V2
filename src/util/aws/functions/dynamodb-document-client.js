@@ -9,11 +9,11 @@ const { TABLE_NAME } = process.env
 export default (() => {
   /**
    * Abstracted DynamoDBDocumentClient get() request.
-   * 
+   *
    * @param  {Object} params - Key{key: value, ...}
    * @return {Object} - DynamoDB Document
    */
-  const get = async (params) => {
+  const get = async params => {
     const getParams = {
       TableName: TABLE_NAME,
       Key: params
@@ -23,11 +23,11 @@ export default (() => {
 
   /**
    * Abstracted DynamoDBDocumentClient put() request
-   * 
+   *
    * @param  {Object} params - Item{key: value, ...}
    * @return {Object} - DynamoDB Document
    */
-  const put = async (params) => {
+  const put = async params => {
     const putParams = {
       TableName: TABLE_NAME,
       Item: params
@@ -37,21 +37,21 @@ export default (() => {
 
   /**
    * Abstracted DynamoDBDocumentClient query() request
-   * 
+   *
    * @param  {Object} params - Item{key: value, ...}
    * @return {Object} - DynamoDB Document
    */
-  const query = async (params) => {
-    const queryParams = _.merge({TableName: TABLE_NAME}, params)
+  const query = async params => {
+    const queryParams = _.merge({ TableName: TABLE_NAME }, params)
     return await ddb.query(queryParams).promise()
   }
 
   /**
    * Abstracted DynamoDBDocumentClient delete() request
-   * 
+   *
    * @param  {Object} params - Item{key: value}
    */
-  const del = async (params) => {
+  const del = async params => {
     const deleteParams = {
       TableName: TABLE_NAME,
       Key: params

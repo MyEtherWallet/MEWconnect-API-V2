@@ -7,8 +7,7 @@ import { stunServers, websocketURL } from '@config'
 import { signals, rtcSignals, roles } from '@signals'
 
 export default class Initiator {
-
-  constructor (options = {}) {
+  constructor(options = {}) {
     this.socket = new WebsocketConnection()
     this.peer = new WebRTCConnection()
 
@@ -23,13 +22,13 @@ export default class Initiator {
     Keys
   ===================================================================================
   */
- 
+
   /* Set the public and private keys, connId, and signed that will be used
    * for the duration of the pairing process. The receiver will need to have access
    * to this information as well, however, the initiator creates the credentials to be
    * shared with the receiver.
    */
-  generateKeys () {
+  generateKeys() {
     const keys = CryptoUtils.generateKeys()
     this.publicKey = keys.publicKey
     this.privateKey = keys.privateKey
@@ -42,7 +41,7 @@ export default class Initiator {
     Encryption
   ===================================================================================
   */
-  
+
   /**
    * Using the generated privateKey, encrypt a message.
    * The message must be a String, however, if an object is given,
@@ -51,19 +50,22 @@ export default class Initiator {
    * @param  {Object} message - String or Object to be encrypted
    * @return {Object} - Encrypted message
    */
-  async encrypt (message) {
+  async encrypt(message) {
     message = typeof message === 'String' ? message : JSON.stringify(message)
     return await CryptoUtils.encrypt(message, this.privateKey)
   }
- 
+
   /**
    * Decrypt an encrypted message using the generated privateKey.
    *
    * @param  {Object} message - Message to be decrypted.
    * @return {Object} - Decrypted message object
    */
-  async decrypt (message) {
-    const decryptedMessageString = await CryptoUtils.decrypt(message, this.privateKey)
+  async decrypt(message) {
+    const decryptedMessageString = await CryptoUtils.decrypt(
+      message,
+      this.privateKey
+    )
     return JSON.parse(decryptedMessageString)
   }
 
@@ -80,12 +82,14 @@ export default class Initiator {
    * @param  {String} websocketURL - WS/WSS websocket URL
    * @param  {Object} options - (Optional) Connection query parameters
    */
-  async connect (websocketURL, options = null) {
-    const queryOptions = options ? options : {
-      role: roles.initiator,
-      connId: this.connId,
-      signed: this.signed
-    }
+  async connect(websocketURL, options = null) {
+    const queryOptions = options
+      ? options
+      : {
+          role: roles.initiator,
+          connId: this.connId,
+          signed: this.signed
+        }
     await this.socket.connect(websocketURL, queryOptions)
   }
 
@@ -95,7 +99,7 @@ export default class Initiator {
    * @param  {String} signal - Signal to listen to. E.g. 'onoffer'
    * @param  {Function} fn - Callback function to perform on given signal
    */
-  on (signal, fn) {
+  on(signal, fn) {
     this.socket.on(signal, fn)
   }
 
@@ -103,7 +107,7 @@ export default class Initiator {
    * Unbind listening to a particular signal that was bound in on()
    * @param  {String} signal - Signal to stop listening to. E.g. 'onoffer'
    */
-  off (signal) {
+  off(signal) {
     this.socket.off(signal)
   }
 
@@ -113,7 +117,7 @@ export default class Initiator {
    * @param  {String} signal - Signal to emit. E.g. 'offersignal'
    * @param  {Object} data - Data/message payload to send
    */
-  send (signal, data) {
+  send(signal, data) {
     this.socket.send(signal, data)
   }
 
@@ -122,14 +126,14 @@ export default class Initiator {
     WebRTC
   ===================================================================================
   */
- 
+
   /**
    * Attempt to create a WebRTC Offer.
    * Return the encrypted offer for transmission to the receiver.
    *
    * @return {Object} - Encrypted WebRTC offer
    */
-  async offer (options = null) {
+  async offer(options = null) {
     const offer = await this.peer.offer(options)
     return await this.encrypt(offer)
   }
@@ -139,14 +143,14 @@ export default class Initiator {
    *
    * @param  {Object} answer - WebRTC answer created by receiver
    */
-  async signal (answer) {
+  async signal(answer) {
     return await this.peer.connect(answer)
   }
 
   /**
    * Disconnect from current WebRTC connection
    */
-  async disconnectRTC () {
+  async disconnectRTC() {
     this.peer = new WebRTCConnection()
   }
 
@@ -156,8 +160,7 @@ export default class Initiator {
    * @param  {String} signal - Signal to listen to. E.g. 'data'
    * @param  {Function} fn - Callback function to perform
    */
-  onRTC (signal, fn) {
+  onRTC(signal, fn) {
     this.peer.on(signal, fn)
   }
-  
 }

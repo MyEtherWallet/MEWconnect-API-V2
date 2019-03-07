@@ -9,14 +9,15 @@ import { validateSignal } from '@util/validation'
 /**
  * Upon receiving signals.offerSignal from the initiator, validate the payload,
  * and relay the message payload to the receiver so that they can create an answer to webRTC offer.
- * 
+ *
  * @param  {Object} event - Original connection event payload from AWS
  * @param  {String} event.body - Payload object string to parse
  * @param  {Object} event.body.data - The actual payload sent by the initiator
  */
 const handler = async (event, context) => {
   const connectionId = event.requestContext.connectionId
-  const endpoint = event.requestContext.domainName + '/' + event.requestContext.stage
+  const endpoint =
+    event.requestContext.domainName + '/' + event.requestContext.stage
   const body = JSON.parse(event.body)
   const data = body.data
 
@@ -36,9 +37,9 @@ const handler = async (event, context) => {
   })
 
   const postData = {
-  	signal: signals.offer,
-  	data: data,
-  	message: 'Initiator sent WebRTC Offer. Please respond.'
+    signal: signals.offer,
+    data: data,
+    message: 'Initiator sent WebRTC Offer. Please respond.'
   }
 
   await postMessage(endpoint, receiver.connectionId, postData)

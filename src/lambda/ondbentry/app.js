@@ -7,7 +7,7 @@ import { signals, roles } from '@util/signals'
 
 /**
  * On DynamoDB entry trigger, handle/process the event according to the client's role.
- * 
+ *
  * @param  {Object} event - Event object passed from AWS
  * @param  {Array} event.Records - The DB entry that triggered this event. Because the threshold
  *                                 is set to 1, this will be an array of 1 record, with the 0 index
@@ -34,10 +34,10 @@ const handler = async (event, context) => {
 
 /**
  * Handle initiator. Send initiated signal payload to initiator.
- * 
+ *
  * @param  {Object} entry - New/updated DynamoDB entry
  */
-const handleInitiator = async (entry) => {
+const handleInitiator = async entry => {
   const connectionId = entry.connectionId.S
   const endpoint = entry.endpoint.S
 
@@ -52,10 +52,10 @@ const handleInitiator = async (entry) => {
 
 /**
  * Handle receiver connection. Send confirmation to both initiator and receiver.
- * 
+ *
  * @param  {Object} entry - New/updated DynamoDB entry
  */
-const handleReceiver = async (entry) => {
+const handleReceiver = async entry => {
   const connectionId = entry.connectionId.S
   const connId = entry.connId.S
   const endpoint = entry.endpoint.S

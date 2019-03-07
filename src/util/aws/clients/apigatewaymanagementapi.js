@@ -1,18 +1,24 @@
-require('aws-sdk/lib/node_loader');
-var AWS = require('aws-sdk/lib/core');
-var Service = AWS.Service;
-var apiLoader = AWS.apiLoader;
+require('aws-sdk/lib/node_loader')
+var AWS = require('aws-sdk/lib/core')
+var Service = AWS.Service
+var apiLoader = AWS.apiLoader
 
-apiLoader.services['apigatewaymanagementapi'] = {};
-AWS.ApiGatewayManagementApi = Service.defineService('apigatewaymanagementapi', ['2018-11-29']);
-Object.defineProperty(apiLoader.services['apigatewaymanagementapi'], '2018-11-29', {
-  get: function get() {
-    var model = require('@util/aws/apis/apigatewaymanagementapi-2018-11-29.min.json');
-    model.paginators = require('@util/aws/apis/apigatewaymanagementapi-2018-11-29.paginators.json').pagination;
-    return model;
-  },
-  enumerable: true,
-  configurable: true
-});
+apiLoader.services['apigatewaymanagementapi'] = {}
+AWS.ApiGatewayManagementApi = Service.defineService('apigatewaymanagementapi', [
+  '2018-11-29'
+])
+Object.defineProperty(
+  apiLoader.services['apigatewaymanagementapi'],
+  '2018-11-29',
+  {
+    get: function get() {
+      var model = require('@util/aws/apis/apigatewaymanagementapi-2018-11-29.min.json')
+      model.paginators = require('@util/aws/apis/apigatewaymanagementapi-2018-11-29.paginators.json').pagination
+      return model
+    },
+    enumerable: true,
+    configurable: true
+  }
+)
 
-module.exports = AWS.ApiGatewayManagementApi;
+module.exports = AWS.ApiGatewayManagementApi
