@@ -1,7 +1,7 @@
 {
-  "name": "simple-websockets-chat-app",
+  "name": "mew-connect-handshake-server",
   "version": "1.0.0",
-  "description": "This is the code and template for the simple-websocket-chat-app.  There are three functions contained within the directories and a SAM template that wires them up to a DynamoDB table and provides the minimal set of permissions needed to run the app:",
+  "description": "",
   "main": "index.js",
   "scripts": {
     "postinstall": "npm run installaws",
@@ -21,9 +21,9 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/aws-samples/simple-websockets-chat-app.git"
+    "url": "git+https://github.com/MyEtherWallet/MEWconnect-API-V2.git"
   },
-  "homepage": "https://github.com/aws-samples/simple-websockets-chat-app#readme",
+  "homepage": "https://github.com/MyEtherWallet/MEWconnect-API-V2#readme",
   "devDependencies": {
     "babel-cli": "^6.26.0",
     "babel-core": "^6.26.3",
