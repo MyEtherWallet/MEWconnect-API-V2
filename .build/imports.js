@@ -107,6 +107,8 @@ const writePackageJSON = async (directory, imports) => {
     let packageDependencies = await getPackageDependencies()
     let moduleAliases = {}
     let isPrepended = false
+
+    dependencies['module-alias'] = '^2.1.0'
     
     await asyncForEach(imports, async imp => {
       let _import = imp.import
@@ -123,7 +125,7 @@ const writePackageJSON = async (directory, imports) => {
 
       // If a resolution exists and it is a relative path (as opposed to a node_module), then copy the resolution... //
       // ... into the AWS lambda module directory //
-      if(resolution && resolution.split('/').length > 1) {
+      if(resolution && resolution.indexOf('node_modules') <= -1 && resolution.split('/').length > 1) {
         let relativePath = resolution.split('dist/')[1]
         moduleAliases[_import] = relativePath
         fs.copySync(resolution, `${directory}/${relativePath}`)
