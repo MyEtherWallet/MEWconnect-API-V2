@@ -27,6 +27,8 @@ const run = async () => {
   let srcDirectories = await getDirectories(SRC_DIR)
   await asyncForEach(srcDirectories, async directory => {
     let file = `${directory}/app.js`
+    let fileExists = fs.pathExistsSync(file)
+    if (!fileExists) return
     let imports = await getImports(file)
     await writePackageJSON(directory, imports)
     await addModuleAlias(file)
@@ -45,7 +47,7 @@ const getDirectories = async (directory) => {
   	dir.files(directory, 'dir', (err, paths) => {
       resolve(paths)
     }, {
-      recursive: false
+      recursive: true
     })
   })
 }
