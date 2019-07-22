@@ -46,7 +46,7 @@ export default class WebsocketConnection {
    * {
    *   signal, // This is the signal that the member function on() can bind to
    *   data, // The actual data payload
-   *   message // Accompanying server messag
+   *   message // Accompanying server message
    * }
    *
    * @param  {String} message - Stringified JSON payload sent by the server
