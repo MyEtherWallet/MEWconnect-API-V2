@@ -4,6 +4,8 @@ import dynamoDocumentClient from '@util/aws/functions/dynamodb-document-client'
 import query from '@util/aws/functions/query'
 import { validConnId, validHex, validRole } from '@util/validation'
 import { signals, roles } from '@util/signals'
+import * as middleware from '@util/middleware'
+import middy from 'middy'
 
 /**
  * Handle an incoming WebSocket connection and update the dynamoDB database with pertinent information.
@@ -17,20 +19,10 @@ import { signals, roles } from '@util/signals'
  *                           created for the particular paired connection
  * @param  {String} signed - Private key signed with the private key created for the connection
  */
-const handler = async (event, context) => {
+const handler = middy(async (event, context) => {
   const connectionId = event.requestContext.connectionId
   const query = event.queryStringParameters || {}
   const role = query.role || null
-  const connId = query.connId || null
-  const signed = query.signed || null
-
-  if (!validRole(role))
-    return { statusCode: 500, body: 'Failed to connect: Invalid @role' }
-  if (!validConnId(connId))
-    return { statusCode: 500, body: 'Failed to connect: Invalid @signed' }
-  if (!validHex(signed))
-    return { statusCode: 500, body: 'Failed to connect: Invalid @signed' }
-
   const connectionData = {
     connectionId,
     query,
@@ -43,7 +35,8 @@ const handler = async (event, context) => {
     case roles.receiver:
       return await handleReceiver(connectionData)
   }
-}
+})
+.use(middleware.validateConnectionParameters())
 
 /**
  * Create a connection entry with initiator details. After successful creation of the entry,
