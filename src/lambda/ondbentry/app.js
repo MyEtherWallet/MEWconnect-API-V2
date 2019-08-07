@@ -18,9 +18,12 @@ const handler = async (event, context) => {
   const eventName = record.eventName
 
   if (eventName !== 'INSERT') return
+  console.log('r', record)
 
   const entry = record.dynamodb.NewImage
   const role = entry.role.S
+
+  console.log('e', entry, role)
 
   switch (role) {
     case roles.initiator:

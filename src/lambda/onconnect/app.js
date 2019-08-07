@@ -54,11 +54,14 @@ const handleInitiator = async connectionData => {
   // Ensure an entry with given @connId does not already exist //
   let entries = await query.byConnId(connectionData.query.connId)
   if (entries.length > 0) {
-    log.warn('Failed to connect: @connId already exists!', { connectionData, entries })
+    log.warn('Failed to connect: @connId already exists!', {
+      connectionData,
+      entries
+    })
     return {
       statusCode: 500,
       body: `Failed to connect: @connId already exists!`
-    }    
+    }
   }
 
   const putParams = {
@@ -103,14 +106,20 @@ const handleReceiver = async connectionData => {
   // Ensure that an initiator exists, and a receiver does not //
   let entries = await query.byConnId(connectionData.query.connId)
   if (entries.length === 0) {
-    log.warn(`Failed to connect: Connection pair doesn't exist!`, { connectionData, entries })
+    log.warn(`Failed to connect: Connection pair doesn't exist!`, {
+      connectionData,
+      entries
+    })
     return {
       statusCode: 500,
       body: `Failed to connect: Connection pair doesn't exist!`
     }
   }
   if (entries.length >= 2) {
-    log.warn(`Failed to connect: A connection pair already exists for this @connId`, { connectionData, entries })
+    log.warn(
+      `Failed to connect: A connection pair already exists for this @connId`,
+      { connectionData, entries }
+    )
     return {
       statusCode: 500,
       body: `Failed to connect: A connection pair already exists for this @connId`
@@ -120,7 +129,10 @@ const handleReceiver = async connectionData => {
   // Check to ensure that given @signed matches what was originally provided by the initiator //
   let initiator = entries[0]
   if (initiator.role !== roles.initiator) {
-    log.warn('Failed to connect: Initiator has disconnected', { connectionData, entries })
+    log.warn('Failed to connect: Initiator has disconnected', {
+      connectionData,
+      entries
+    })
     return {
       statusCode: 500,
       body: 'Failed to connect: Initiator has disconnected'

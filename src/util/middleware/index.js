@@ -1,7 +1,7 @@
 'use strict'
 
 import log from '@util/log'
-import { validConnId, validHex, validRole } from '@util/validation'
+import { validConnId, validHex, validRole, validateSignal } from '@util/validation'
 
 /**
  * Middleware to validate the parameters necessary for successful onconnect
@@ -40,4 +40,31 @@ const validateConnectionParameters = () => {
   }
 }
 
-export { validateConnectionParameters }
+/**
+ * Validate a particular message's signal against its body data
+ */
+const validateMessageSignal = () => {
+  return {
+    before: async handler => {
+      const event = handler.event
+      const body = JSON.parse(event.body)
+      const data = body.data
+      log.info('Validating message signal...', { signal: event.requestContext.routeKey, data })
+
+      try {
+        await validateSignal({
+          signal: event.requestContext.routeKey,
+          data: data
+        })
+      } catch (e) {
+        log.warn('Invalid signal parameters', { event, error: e })
+        return { statusCode: 500, body: 'Invalid signal params' }
+      }
+
+      log.info('Successful validation of message signal')
+      return
+    }
+  }
+}
+
+export { validateConnectionParameters, validateMessageSignal }
