@@ -1,11 +1,11 @@
 'use strict'
 
-import dynamoDocumentClient from '@util/aws/functions/dynamodb-document-client'
-import query from '@util/aws/functions/query'
-import { validConnId, validHex, validRole } from '@util/validation'
-import { signals, roles } from '@util/signals'
-import * as middleware from '@util/middleware'
 import middy from 'middy'
+import dynamoDocumentClient from '@util/aws/functions/dynamodb-document-client'
+import * as middleware from '@util/middleware'
+import log from '@util/log'
+import query from '@util/aws/functions/query'
+import { signals, roles } from '@util/signals'
 
 /**
  * Handle an incoming WebSocket connection and update the dynamoDB database with pertinent information.
@@ -35,8 +35,7 @@ const handler = middy(async (event, context) => {
     case roles.receiver:
       return await handleReceiver(connectionData)
   }
-})
-.use(middleware.validateConnectionParameters())
+}).use(middleware.validateConnectionParameters())
 
 /**
  * Create a connection entry with initiator details. After successful creation of the entry,
@@ -50,13 +49,17 @@ const handler = middy(async (event, context) => {
  * @param  {String} connectionData.query.signed - The private key signed with the private key generated and supplied by the initiator.
  */
 const handleInitiator = async connectionData => {
+  log.info('Attempting to connect Initiator...', { connectionData })
+
   // Ensure an entry with given @connId does not already exist //
   let entries = await query.byConnId(connectionData.query.connId)
-  if (entries.length > 0)
+  if (entries.length > 0) {
+    log.warn('Failed to connect: @connId already exists!', { connectionData, entries })
     return {
       statusCode: 500,
       body: `Failed to connect: @connId already exists!`
-    }
+    }    
+  }
 
   const putParams = {
     connectionId: connectionData.connectionId,
@@ -71,8 +74,10 @@ const handleInitiator = async connectionData => {
 
   try {
     await dynamoDocumentClient.put(putParams)
+    log.info('Successfully connected Initiator')
     return { statusCode: 200, body: `Connected` }
   } catch (e) {
+    log.warn('Failed to connect Initiator', { e, putParams })
     return { statusCode: 500, body: `Failed to connect: ${JSON.stringify(e)}` }
   }
 }
@@ -93,28 +98,38 @@ const handleInitiator = async connectionData => {
  *                                                by the initiator.
  */
 const handleReceiver = async connectionData => {
+  log.info('Attempting to connect Receiver...', { connectionData })
+
   // Ensure that an initiator exists, and a receiver does not //
   let entries = await query.byConnId(connectionData.query.connId)
-  if (entries.length === 0)
+  if (entries.length === 0) {
+    log.warn(`Failed to connect: Connection pair doesn't exist!`, { connectionData, entries })
     return {
       statusCode: 500,
       body: `Failed to connect: Connection pair doesn't exist!`
     }
-  if (entries.length >= 2)
+  }
+  if (entries.length >= 2) {
+    log.warn(`Failed to connect: A connection pair already exists for this @connId`, { connectionData, entries })
     return {
       statusCode: 500,
       body: `Failed to connect: A connection pair already exists for this @connId`
     }
+  }
 
   // Check to ensure that given @signed matches what was originally provided by the initiator //
   let initiator = entries[0]
-  if (initiator.role !== roles.initiator)
+  if (initiator.role !== roles.initiator) {
+    log.warn('Failed to connect: Initiator has disconnected', { connectionData, entries })
     return {
       statusCode: 500,
       body: 'Failed to connect: Initiator has disconnected'
     }
-  if (connectionData.query.signed !== initiator.signed)
+  }
+  if (connectionData.query.signed !== initiator.signed) {
+    log.warn('Failed to connect: Invalid @signed', { connectionData, entries })
     return { statusCode: 500, body: 'Failed to connect: Invalid @signed' }
+  }
 
   // Create entry with receiver information //
   const putParams = {
@@ -131,8 +146,10 @@ const handleReceiver = async connectionData => {
   // Perform update //
   try {
     await dynamoDocumentClient.put(putParams)
+    log.info('Successfully connected Receiver')
     return { statusCode: 200, body: `Connected` }
   } catch (e) {
+    log.warn('Failed to connect Receiver', { e, putParams })
     return { statusCode: 500, body: `Failed to connect: ${JSON.stringify(e)}` }
   }
 }
