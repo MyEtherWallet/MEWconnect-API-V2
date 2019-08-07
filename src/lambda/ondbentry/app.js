@@ -1,6 +1,7 @@
 'use strict'
 
 import dynamoDocumentClient from '@util/aws/functions/dynamodb-document-client'
+import log from '@util/log'
 import postMessage from '@util/aws/functions/post-message'
 import query from '@util/aws/functions/query'
 import { signals, roles } from '@util/signals'
@@ -16,15 +17,14 @@ import { signals, roles } from '@util/signals'
 const handler = async (event, context) => {
   const record = event.Records[0]
   const eventName = record.eventName
+  log.info('DB Event', { event, record })
 
   if (eventName !== 'INSERT') return
-  console.log('r', record)
 
   const entry = record.dynamodb.NewImage
   const role = entry.role.S
 
-  console.log('e', entry, role)
-
+  log.info('New connection entry', { entry, role })
   switch (role) {
     case roles.initiator:
       return await handleInitiator(entry)
@@ -50,6 +50,7 @@ const handleInitiator = async entry => {
     message: 'Connected. Waiting for receiver.'
   }
 
+  log.info('Initiator Connected. Waiting for receiver.', { postData })
   return await postMessage(endpoint, connectionId, postData)
 }
 
@@ -72,6 +73,12 @@ const handleReceiver = async entry => {
     return obj.role === roles.receiver
   })
 
+  // Handle possible error //
+  if (pair.length < 2) {
+    log.warn('Connection pair missing role', { pair })
+    return
+  }
+
   // Post confirmation signal payloads to both initiator and receiver //
   const postDataInitiator = {
     signal: signals.confirmation,
@@ -84,6 +91,7 @@ const handleReceiver = async entry => {
     message: 'Connected. Awaiting WebRTC Offer Details.'
   }
 
+  log.info('Receiver connected. Initiator must create WebRTC Offer', { pair, postDataInitiator, postDataReceiver })
   await postMessage(endpoint, initiator.connectionId, postDataInitiator)
   await postMessage(endpoint, receiver.connectionId, postDataReceiver)
 }

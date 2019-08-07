@@ -76,7 +76,7 @@ const handleInitiator = async connectionData => {
   }
 
   try {
-    await dynamoDocumentClient.put(putParams)
+    const res = await dynamoDocumentClient.put(putParams)
     log.info('Successfully connected Initiator')
     return { statusCode: 200, body: `Connected` }
   } catch (e) {
