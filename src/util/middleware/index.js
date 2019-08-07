@@ -1,7 +1,12 @@
 'use strict'
 
 import log from '@util/log'
-import { validConnId, validHex, validRole, validateSignal } from '@util/validation'
+import {
+  validConnId,
+  validHex,
+  validRole,
+  validateSignal
+} from '@util/validation'
 
 /**
  * Middleware to validate the parameters necessary for successful onconnect
@@ -49,7 +54,10 @@ const validateMessageSignal = () => {
       const event = handler.event
       const body = JSON.parse(event.body)
       const data = body.data
-      log.info('Validating message signal...', { signal: event.requestContext.routeKey, data })
+      log.info('Validating message signal...', {
+        signal: event.requestContext.routeKey,
+        data
+      })
 
       try {
         await validateSignal({
