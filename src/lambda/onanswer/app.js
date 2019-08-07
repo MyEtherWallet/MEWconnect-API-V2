@@ -41,7 +41,6 @@ const handler = middy(async (event, context) => {
   await postMessage(endpoint, initiator.connectionId, postData)
   log.info('Sent answer signal', { postData })
   return { statusCode: 200, body: 'Data Sent' }
-})
-.use(middleware.validateMessageSignal())
+}).use(middleware.validateMessageSignal())
 
 export { handler }

@@ -38,7 +38,9 @@ const handler = async (event, context) => {
 
   await postMessage(endpoint, connectionId, postData)
   await dynamoDocumentClient.delete({ connectionId: connectionId })
-  log.info('WebRTC Connection Established. Closing socket connection.', { connectionId })
+  log.info('WebRTC Connection Established. Closing socket connection.', {
+    connectionId
+  })
   return { statusCode: 200, body: 'Data Sent' }
 }
 
