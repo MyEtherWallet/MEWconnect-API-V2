@@ -91,7 +91,11 @@ const handleReceiver = async entry => {
     message: 'Connected. Awaiting WebRTC Offer Details.'
   }
 
-  log.info('Receiver connected. Initiator must create WebRTC Offer', { pair, postDataInitiator, postDataReceiver })
+  log.info('Receiver connected. Initiator must create WebRTC Offer', {
+    pair,
+    postDataInitiator,
+    postDataReceiver
+  })
   await postMessage(endpoint, initiator.connectionId, postDataInitiator)
   await postMessage(endpoint, receiver.connectionId, postDataReceiver)
 }

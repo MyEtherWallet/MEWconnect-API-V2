@@ -2,6 +2,7 @@
 
 import twilio from 'twilio'
 import dynamoDocumentClient from '@util/aws/functions/dynamodb-document-client'
+import log from '@util/log'
 import postMessage from '@util/aws/functions/post-message'
 import query from '@util/aws/functions/query'
 import { signals, roles } from '@util/signals'
@@ -17,11 +18,13 @@ import { signals, roles } from '@util/signals'
  * @param  {String} event.body - Payload object string to parse
  */
 const handler = async (event, context) => {
+  log.info('TryTurn event', { event })
   const connectionId = event.requestContext.connectionId
   const endpoint =
     event.requestContext.domainName + '/' + event.requestContext.stage
   const body = JSON.parse(event.body)
 
+  // Connection pair info //
   const entry = await query.byConnectionId(connectionId)
   const pair = await query.byConnId(entry.connId)
   const initiator = pair.find(obj => {
@@ -30,8 +33,12 @@ const handler = async (event, context) => {
   const receiver = pair.find(obj => {
     return obj.role === roles.receiver
   })
+  log.info('Connection Pair', { entry, pair, initiator, receiver })
 
+  // Create Turn Server credentials //
+  log.info('Creating TURN server credentials...')
   const turnServerCredentials = await createTurnServerCredentials()
+  log.info('TURN server credentials created', { turnServerCredentials })
 
   const initiatorPostData = {
     signal: signals.turnToken,
@@ -47,6 +54,7 @@ const handler = async (event, context) => {
 
   await postMessage(endpoint, initiator.connectionId, initiatorPostData)
   await postMessage(endpoint, receiver.connectionId, receiverPostData)
+  log.info('Sent TURN server credentials')
   return { statusCode: 200, body: 'Data Sent' }
 }
 

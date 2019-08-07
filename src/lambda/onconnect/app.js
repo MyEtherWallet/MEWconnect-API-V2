@@ -20,6 +20,7 @@ import { signals, roles } from '@util/signals'
  * @param  {String} signed - Private key signed with the private key created for the connection
  */
 const handler = middy(async (event, context) => {
+  log.info('New connection event', { event })
   const connectionId = event.requestContext.connectionId
   const query = event.queryStringParameters || {}
   const role = query.role || null
