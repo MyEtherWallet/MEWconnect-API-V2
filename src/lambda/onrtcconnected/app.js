@@ -1,6 +1,7 @@
 'use strict'
 
 import dynamoDocumentClient from '@util/aws/functions/dynamodb-document-client'
+import log from '@util/log'
 import postMessage from '@util/aws/functions/post-message'
 import query from '@util/aws/functions/query'
 import { signals, roles } from '@util/signals'
@@ -15,6 +16,7 @@ import { signals, roles } from '@util/signals'
  * @param  {Object} event.body.data - The actual payload sent by the initiator/receiver
  */
 const handler = async (event, context) => {
+  log.info('RtcConnected event', { event })
   const connectionId = event.requestContext.connectionId
   const endpoint =
     event.requestContext.domainName + '/' + event.requestContext.stage
@@ -23,7 +25,9 @@ const handler = async (event, context) => {
 
   try {
     const entry = await query.byConnectionId(connectionId)
+    log.info('Connection entry', { entry })
   } catch (e) {
+    log.warn('No such connection exists', { error: e, connectionId })
     return { statusCode: 500, body: 'No such connection exists.' }
   }
 
@@ -33,7 +37,10 @@ const handler = async (event, context) => {
   }
 
   await postMessage(endpoint, connectionId, postData)
-  await dynamoDocumentClient.delete({ connectionId: connectionId })
+  // await dynamoDocumentClient.delete({ connectionId: connectionId })
+  log.info('WebRTC Connection Established. Ready for disconnect.', {
+    connectionId
+  })
   return { statusCode: 200, body: 'Data Sent' }
 }
 
