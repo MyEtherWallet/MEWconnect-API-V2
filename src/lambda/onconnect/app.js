@@ -82,7 +82,7 @@ const handleInitiator = async connectionData => {
     return { statusCode: 200, body: `Connected` }
   } catch (e) {
     log.warn('Failed to connect Initiator', { e, putParams })
-    return { statusCode: 500, body: `Failed to connect: ${JSON.stringify(e)}` }
+    return { statusCode: 404, body: `Failed to connect: ${JSON.stringify(e)}` }
   }
 }
 
@@ -112,7 +112,7 @@ const handleReceiver = async connectionData => {
       entries
     })
     return {
-      statusCode: 500,
+      statusCode: 404,
       body: `Failed to connect: Connection pair doesn't exist!`
     }
   }
@@ -122,7 +122,7 @@ const handleReceiver = async connectionData => {
       { connectionData, entries }
     )
     return {
-      statusCode: 500,
+      statusCode: 404,
       body: `Failed to connect: A connection pair already exists for this @connId`
     }
   }
@@ -135,13 +135,13 @@ const handleReceiver = async connectionData => {
       entries
     })
     return {
-      statusCode: 500,
+      statusCode: 404,
       body: 'Failed to connect: Initiator has disconnected'
     }
   }
   if (connectionData.query.signed !== initiator.signed) {
     log.warn('Failed to connect: Invalid @signed', { connectionData, entries })
-    return { statusCode: 500, body: 'Failed to connect: Invalid @signed' }
+    return { statusCode: 404, body: 'Failed to connect: Invalid @signed' }
   }
 
   // Create entry with receiver information //
@@ -163,7 +163,7 @@ const handleReceiver = async connectionData => {
     return { statusCode: 200, body: `Connected` }
   } catch (e) {
     log.warn('Failed to connect Receiver', { e, putParams })
-    return { statusCode: 500, body: `Failed to connect: ${JSON.stringify(e)}` }
+    return { statusCode: 404, body: `Failed to connect: ${JSON.stringify(e)}` }
   }
 }
 
