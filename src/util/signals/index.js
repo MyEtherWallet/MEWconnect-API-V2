@@ -21,7 +21,9 @@ const signals = {
   confirmationFailedBusy: 'confirmationFailedBusy',
   confirmationFailed: 'confirmationFailed',
   receivedSignal: 'receivedSignal',
-  error: 'error'
+  error: 'error',
+  ping: 'ping',
+  pong: 'pong'
 }
 
 const roles = {

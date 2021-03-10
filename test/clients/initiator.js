@@ -33,6 +33,7 @@ export default class Initiator {
     this.publicKey = keys.publicKey
     this.privateKey = keys.privateKey
     this.connId = CryptoUtils.generateConnId(this.publicKey)
+    console.log('connId: ', this.connId)
     this.signed = CryptoUtils.signMessage(this.privateKey, this.privateKey)
   }
 

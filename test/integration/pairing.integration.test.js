@@ -62,7 +62,7 @@ const pass = async done => {
   setTimeout(done, process.env.CONNECTION_TIMEOUT)
 }
 
-jest.setTimeout(5000)
+jest.setTimeout(10000)
 
 /*
 ===================================================================================
@@ -327,19 +327,49 @@ describe('Pairing', () => {
 
   /*
   ===================================================================================
-    2. Pairing -> Offer Creation
+    2. Ping
+  ===================================================================================
+  */
+  describe('Ping', () => {
+    /*
+    ===================================================================================
+      2a. Ping -> [Initiator & Receiver]
+    ===================================================================================
+    */
+    describe('Ping [Initiator & Receiver] ', () => {
+      describe('<SUCCESS>', () => {
+        it('Should be able to ping/pong the Initiator', async done => {
+          initiator.send(signals.ping)
+          initiator.on(signals.pong, data => {
+            done()
+          })
+        })
+        it('Should be able to ping/pong the Receiver', async done => {
+          receiver.send(signals.ping)
+          receiver.on(signals.pong, data => {
+            done()
+          })
+        })
+      })
+    })
+
+  })
+
+  /*
+  ===================================================================================
+    3. Pairing -> Offer Creation
   ===================================================================================
   */
   describe('Offer Creation', () => {
     /*
     ===================================================================================
-      2a. Pairing -> Offer Creation -> OfferSignal [Initiator → Server]
+      3a. Pairing -> Offer Creation -> OfferSignal [Initiator → Server]
     ===================================================================================
     */
     describe('OfferSignal [Initiator → Server]', () => {
       /*
       ===================================================================================
-        2a. Pairing -> Offer Creation -> OfferSignal [Initiator → Server] -> FAIL
+        3a. Pairing -> Offer Creation -> OfferSignal [Initiator → Server] -> FAIL
       ===================================================================================
       */
       describe('<FAIL>', () => {
@@ -364,7 +394,7 @@ describe('Pairing', () => {
       })
       /*
       ===================================================================================
-        2a. Pairing -> Offer Creation -> OfferSignal [Initiator → Server] -> SUCCESS
+        3a. Pairing -> Offer Creation -> OfferSignal [Initiator → Server] -> SUCCESS
       ===================================================================================
       */
       describe('<SUCCESS>', () => {
@@ -390,19 +420,19 @@ describe('Pairing', () => {
 
   /*
   ===================================================================================
-    3. Pairing -> Answer Creation
+    4. Pairing -> Answer Creation
   ===================================================================================
   */
   describe('Answer Creation', () => {
     /*
     ===================================================================================
-      3a. Pairing -> Answer Creation -> AnswerSignal [Receiver → Server]
+      4a. Pairing -> Answer Creation -> AnswerSignal [Receiver → Server]
     ===================================================================================
     */
     describe('AnswerSignal [Receiver → Server]', () => {
       /*
       ===================================================================================
-        3a. Pairing -> Answer Creation -> AnswerSignal [Receiver → Server] -> FAIL
+        4a. Pairing -> Answer Creation -> AnswerSignal [Receiver → Server] -> FAIL
       ===================================================================================
       */
       describe('<FAIL>', () => {
@@ -427,7 +457,7 @@ describe('Pairing', () => {
       })
       /*
       ===================================================================================
-        3a. Pairing -> Answer Creation -> AnswerSignal [Receiver → Server] -> SUCCESS
+        4a. Pairing -> Answer Creation -> AnswerSignal [Receiver → Server] -> SUCCESS
       ===================================================================================
       */
       describe('<SUCCESS>', () => {
@@ -450,19 +480,19 @@ describe('Pairing', () => {
 
   /*
   ===================================================================================
-    4. Pairing -> WebRTC Connection
+    5. Pairing -> WebRTC Connection
   ===================================================================================
   */
   describe('RTC Connection', () => {
     /*
     ===================================================================================
-      4a. Pairing -> RTC Connection -> RTC Connection [Initiator & Receiver]
+      5a. Pairing -> RTC Connection -> RTC Connection [Initiator & Receiver]
     ===================================================================================
     */
     describe('RTC Connection [Initiator & Receiver] ', () => {
       /*
       ===================================================================================
-        4a. Pairing -> RTC Connection -> RTC Connection [Initiator & Receiver] -> SUCCESS
+        5a. Pairing -> RTC Connection -> RTC Connection [Initiator & Receiver] -> SUCCESS
       ===================================================================================
       */
       describe('<SUCCESS>', () => {
@@ -484,13 +514,13 @@ describe('Pairing', () => {
       })
       /*
       ===================================================================================
-        4b. Pairing -> RTC Connection (TURN) -> RTC Connection [Initiator & Receiver]
+        5b. Pairing -> RTC Connection (TURN) -> RTC Connection [Initiator & Receiver]
       ===================================================================================
       */
       describe('RTC Connection (TURN) [Initiator & Receiver] ', () => {
         /*
         ===================================================================================
-          4b. Pairing -> RTC Connection (TURN) -> RTC Connection [Initiator & Receiver] -> SUCCESS
+          5b. Pairing -> RTC Connection (TURN) -> RTC Connection [Initiator & Receiver] -> SUCCESS
         ===================================================================================
         */
         describe('<SUCCESS>', () => {
@@ -537,13 +567,13 @@ describe('Pairing', () => {
       })
       /*
       ===================================================================================
-        4c. Pairing -> RTC Connection -> RtcConnected [Initiator → Server]
+        5c. Pairing -> RTC Connection -> RtcConnected [Initiator → Server]
       ===================================================================================
       */
       describe('RtcConnected [Initiator & Receiver → Server]', () => {
         /*
         ===================================================================================
-          4c. Pairing -> RTC Connection -> RtcConnected [Initiator → Server] -> SUCCESS
+          5c. Pairing -> RTC Connection -> RtcConnected [Initiator → Server] -> SUCCESS
         ===================================================================================
         */
         describe('<SUCCESS>', () => {
@@ -557,13 +587,13 @@ describe('Pairing', () => {
       })
       /*
       ===================================================================================
-        4c. Pairing -> RTC Connection -> RtcConnected [Receiver → Server]
+        5c. Pairing -> RTC Connection -> RtcConnected [Receiver → Server]
       ===================================================================================
       */
       describe('RtcConnected [Receiver & Receiver → Server]', () => {
         /*
         ===================================================================================
-          4c. Pairing -> RTC Connection -> RtcConnected [Receiver → Server] -> SUCCESS
+          5c. Pairing -> RTC Connection -> RtcConnected [Receiver → Server] -> SUCCESS
         ===================================================================================
         */
         describe('<SUCCESS>', () => {

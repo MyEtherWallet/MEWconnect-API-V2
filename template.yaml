@@ -259,6 +259,36 @@ Resources:
           Resource:
           - 'arn:aws:execute-api:*:*:*/@connections/*'
 
+  OnPingFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/lambda/onping/
+      Handler: app.handler
+      MemorySize: 256
+      Runtime: nodejs10.x
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref ConnectionsTable
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName: !Ref ConnectionsTable
+      - Statement:
+        - Effect: Allow
+          Action:
+          - dynamodb:DescribeStream
+          - dynamodb:GetRecords
+          - dynamodb:GetShardIterator
+          - dynamodb:ListStreams
+          - dynamodb:Query
+          Resource: 
+          - "*"
+      - Statement:
+        - Effect: Allow
+          Action:
+          - 'execute-api:ManageConnections'
+          Resource:
+          - 'arn:aws:execute-api:*:*:*/@connections/*'
+
 Outputs:
   ConnectionsTableArn:
     Description: "Connections table ARN"
