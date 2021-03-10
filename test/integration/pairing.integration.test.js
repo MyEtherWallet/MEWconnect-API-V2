@@ -369,8 +369,7 @@ describe('Pairing', () => {
       describe('<SUCCESS>', () => {
         it('Should send an offer and server list to the SignalServer for retransmission to the receiver', async done => {
           const offer = await initiator.offer()
-          const message = { data: offer, connId: '02a8b5d9d59ab221b3c2d406cf413578' }
-          console.log('offer', message)
+          const message = { data: offer, connId: initiator.connId }
           initiator.send(signals.offerSignal, message)
           receiver.on(signals.offer, async data => {
             webRTCOffer = await receiver.decrypt(data.data)
