@@ -24,7 +24,7 @@ const handler = async (event, context) => {
 
   // Connection pair info //
   const entry = await query.byConnectionId(connectionId)
- 
+
   const postData = {
     signal: signals.pong,
     data: '',
