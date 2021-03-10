@@ -38,6 +38,13 @@ const handler = async (event, context) => {
   // Create Turn Server credentials //
   log.info('Creating TURN server credentials...')
   const turnServerCredentials = await createTurnServerCredentials()
+
+  // Handle possible error //
+  if (turnServerCredentials.error) {
+    return { statusCode: 500, body: 'Error Creating TURN Credentials' }
+  }
+
+  // Crated successfully //
   log.info('TURN server credentials created', { turnServerCredentials })
 
   const initiatorPostData = {
@@ -67,7 +74,10 @@ const createTurnServerCredentials = async () => {
         resolve(message)
       })
       .catch(err => {
-        reject(err)
+        log.warn('Error creating TURN server', { err })
+        reject({
+          error: err
+        })
       })
   })
 }

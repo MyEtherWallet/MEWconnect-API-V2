@@ -1,4 +1,3 @@
-
 // Libs //
 import Initiator from '@clients/initiator'
 import Receiver from '@clients/receiver'
@@ -62,6 +61,8 @@ let iceServers
 const pass = async done => {
   setTimeout(done, process.env.CONNECTION_TIMEOUT)
 }
+
+jest.setTimeout(5000)
 
 /*
 ===================================================================================
@@ -369,8 +370,10 @@ describe('Pairing', () => {
       describe('<SUCCESS>', () => {
         it('Should send an offer and server list to the SignalServer for retransmission to the receiver', async done => {
           const offer = await initiator.offer()
-          const message = { data: offer, connId: '02a8b5d9d59ab221b3c2d406cf413578' }
-          console.log('offer', message)
+          const message = {
+            data: offer,
+            connId: initiator.connId
+          }
           initiator.send(signals.offerSignal, message)
           receiver.on(signals.offer, async data => {
             webRTCOffer = await receiver.decrypt(data.data)
@@ -511,6 +514,9 @@ describe('Pairing', () => {
             done()
           })
           it('Should connect peers via received ICE servers', async done => {
+            if (!iceServers) {
+              done.fail(new Error('Missing ICE Servers'))
+            }
             const offer = await initiator.offer(iceServers)
             const decryptedOffer = await receiver.decrypt(offer)
             const answer = await receiver.answer(decryptedOffer)

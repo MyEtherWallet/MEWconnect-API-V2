@@ -33,7 +33,7 @@ const handler = async (event, context) => {
 
   const postData = {
     signal: signals.disconnect,
-    message: 'WebRTC Connection Established. Closing socket connection.'
+    message: 'WebRTC Connection Established. Ready for disconnect.'
   }
 
   await postMessage(endpoint, connectionId, postData)
