@@ -31,6 +31,7 @@ const handler = middy(async (event, context) => {
   const receiver = pair.find(obj => {
     return obj.role === roles.receiver
   })
+
   log.info('Connection Pair', { entry, pair, receiver })
 
   const postData = {
