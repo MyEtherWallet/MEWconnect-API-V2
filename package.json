@@ -38,7 +38,7 @@
     "find-requires": "^0.2.4",
     "fs-extra": "^7.0.1",
     "jest": "^23.6.0",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.21",
     "module-alias": "^2.1.0",
     "node-cmd": "^3.0.0",
     "node-dir": "^0.1.17",
