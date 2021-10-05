@@ -32,7 +32,7 @@ const handler = async (event, context) => {
   try {
     if (other) {
       const postData = {
-        signal: signals.disconnect,
+        signal: signals.disconnected,
         data: '',
         message: `${entry.role} has disconnected`
       }

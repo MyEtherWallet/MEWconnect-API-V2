@@ -1,4 +1,4 @@
-FROM node:8.10.0-alpine
+FROM node:12.13.0-alpine
 
 ARG AWSCLI_VERSION
 ENV AWSCLI_VERSION=${AWSCLI_VERSION}
@@ -9,14 +9,13 @@ ENV AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
 ARG AWS_SECRET_ACCESS_KEY
 ENV AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
 
-RUN apk add --update \
-    python \
-    python-dev \
-    py-pip \
+RUN apk add --update --no-cache \
+    python3 \
+    py3-pip \
     build-base \
-    && pip install --upgrade pip \
-    && pip install awscli --upgrade --user \
-    && apk --purge -v del py-pip \
+    && pip3 install --upgrade pip \
+    && pip3 install awscli --upgrade --user \
+    && apk --purge -v del py3-pip \
     && rm -rf /var/cache/apk/*
 
 RUN export AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}

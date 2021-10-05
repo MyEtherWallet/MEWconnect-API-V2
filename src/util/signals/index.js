@@ -14,6 +14,7 @@ const signals = {
   initiated: 'initiated',
   rtcConnected: 'rtcconnected',
   disconnect: 'disconnect',
+  disconnected: 'disconnected',
   handshake: 'handshake',
   confirmation: 'confirmation',
   socketTimeout: 'socketTimeout',

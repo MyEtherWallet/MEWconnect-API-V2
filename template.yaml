@@ -78,7 +78,7 @@ Resources:
       CodeUri: dist/lambda/ondbentry/
       Handler: app.handler
       MemorySize: 256
-      Runtime: nodejs10.x
+      Runtime: nodejs12.x
       Environment:
         Variables:
           TABLE_NAME: !Ref ConnectionsTable
@@ -108,7 +108,7 @@ Resources:
       CodeUri: dist/lambda/onconnect/
       Handler: app.handler
       MemorySize: 256
-      Runtime: nodejs10.x
+      Runtime: nodejs12.x
       Environment:
         Variables:
           TABLE_NAME: !Ref ConnectionsTable
@@ -128,7 +128,7 @@ Resources:
       CodeUri: dist/lambda/ondisconnect/
       Handler: app.handler
       MemorySize: 256
-      Runtime: nodejs10.x
+      Runtime: nodejs12.x
       Environment:
         Variables:
           TABLE_NAME: !Ref ConnectionsTable
@@ -158,7 +158,7 @@ Resources:
       CodeUri: dist/lambda/ontryturn/
       Handler: app.handler
       MemorySize: 256
-      Runtime: nodejs10.x
+      Runtime: nodejs12.x
       Environment:
         Variables:
           TABLE_NAME: !Ref ConnectionsTable
@@ -191,7 +191,7 @@ Resources:
       CodeUri: dist/lambda/onoffer/
       Handler: app.handler
       MemorySize: 256
-      Runtime: nodejs10.x
+      Runtime: nodejs12.x
       Environment:
         Variables:
           TABLE_NAME: !Ref ConnectionsTable
@@ -221,7 +221,7 @@ Resources:
       CodeUri: dist/lambda/onanswer/
       Handler: app.handler
       MemorySize: 256
-      Runtime: nodejs10.x
+      Runtime: nodejs12.x
       Environment:
         Variables:
           TABLE_NAME: !Ref ConnectionsTable
@@ -251,7 +251,7 @@ Resources:
       CodeUri: dist/lambda/onrtcconnected/
       Handler: app.handler
       MemorySize: 256
-      Runtime: nodejs10.x
+      Runtime: nodejs12.x
       Environment:
         Variables:
           TABLE_NAME: !Ref ConnectionsTable
@@ -281,7 +281,7 @@ Resources:
       CodeUri: dist/lambda/onping/
       Handler: app.handler
       MemorySize: 256
-      Runtime: nodejs10.x
+      Runtime: nodejs12.x
       Environment:
         Variables:
           TABLE_NAME: !Ref ConnectionsTable

@@ -32,7 +32,7 @@
     "bluebird": "^3.5.3",
     "crypto": "^1.0.1",
     "dotenv": "^6.2.0",
-    "eccrypto": "^1.1.1",
+    "eccrypto": "^1.1.6",
     "ethereumjs-util": "^6.0.0",
     "find-imports": "^1.1.0",
     "find-requires": "^0.2.4",
@@ -52,7 +52,7 @@
     "secp256k1": "^3.6.1",
     "simple-peer": "^9.2.1",
     "write-pkg": "^3.2.0",
-    "wrtc": "^0.3.5"
+    "wrtc": "^0.4.7"
   },
   "_moduleAliases": {
     "@": "dist",
