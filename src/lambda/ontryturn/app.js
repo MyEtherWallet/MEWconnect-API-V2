@@ -55,7 +55,12 @@ const handler = async (event, context) => {
 
   const receiverPostData = {
     signal: signals.attemptingTurn,
-    data: {},
+    data: {
+      data: turnServerCredentials.iceServers.map((s) => {
+        s.url = s.urls;
+        return s;
+      }),
+    },
     message: 'TURN server credentials created'
   }
 
